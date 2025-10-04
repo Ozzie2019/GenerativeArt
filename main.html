@@ -3,43 +3,64 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Silk-like Kaleidoscope — Enhanced (with Pen Dots)</title>
+  <title>Silk-like Kaleidoscope — Audio + Symmetry Folds</title>
   <style>
     :root{--bg:#071021;--panel:#0f1724;--accent:#7dd3fc}
-    html,body{height:100%;margin:0;font-family:Inter, system-ui, Arial;background:var(--bg);color:#e6eef8;overflow:hidden}
-    .app{display:grid;grid-template-columns:380px 1fr;height:100vh;gap:12px;padding:12px;box-sizing:border-box}
-    .panel{background:linear-gradient(180deg,#071025 0%, #08162a 100%);padding:12px;border-radius:10px;box-shadow:0 8px 30px rgba(2,6,23,.6);overflow:auto}
+    html,body{
+      height:100%; margin:0;
+      font-family:Inter, system-ui, Arial, Helvetica, sans-serif;
+      background:#000; color:#e6eef8; overflow:hidden;
+    }
+    .app{
+      display:grid; grid-template-columns:480px 1fr;
+      height:100vh; width:100vw; gap:12px; padding:12px; box-sizing:border-box;
+      background:#000;
+    }
+    .panel{
+      background:linear-gradient(180deg,#071025 0%, #08162a 100%);
+      padding:12px; border-radius:10px;
+      box-shadow:0 8px 30px rgba(2,6,23,.6); overflow:auto;
+    }
     label{display:block;margin:8px 0 6px;font-size:13px;color:#bcdafd}
     input[type=range]{width:100%}
-    input[type=number],select,input[type=color]{width:100%;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,.06);background:transparent;color:inherit}
-    .row{display:flex;gap:8px}
+    input[type=number],select,input[type=color],input[type=text]{
+      width:100%; padding:6px;border-radius:6px;
+      border:1px solid rgba(255,255,255,.06); background:transparent;color:inherit
+    }
+    .row{display:flex;gap:8px;align-items:center}
     .row > *{flex:1}
-    button{background:var(--accent);border:none;padding:8px;border-radius:8px;color:#023047;font-weight:600;cursor:pointer}
+    button{
+      background:var(--accent); border:none; padding:8px 10px; border-radius:8px;
+      color:#023047; font-weight:600; cursor:pointer
+    }
     .canvas-wrap{position:relative;width:100%;height:100%}
     canvas{position:absolute;inset:0;width:100%;height:100%;display:block;border-radius:10px;touch-action:none;cursor:crosshair}
-    .footer{margin-top:10px;font-size:12px;color:#86b9d8}
     .small{font-size:12px;color:#9fc9e6}
+    .chip{display:inline-block;padding:4px 8px;border:1px solid #234;border-radius:999px;background:#0a1428;color:#9fd8ff;font-size:12px;margin-top:6px}
+    progress{width:100%;height:8px;border-radius:6px;background:#0b1a2f}
+    hr{border:0;border-top:1px solid rgba(255,255,255,.08);margin:12px 0}
   </style>
 </head>
 <body>
   <div class="app">
     <div class="panel">
-      <h3>Silk-like Kaleidoscope — Enhanced</h3>
+      <h3>Silk-like Kaleidoscope — Audio Reactive + Symmetry</h3>
 
-      <label>Number of pens</label>
+      <label>Number of pens (base)</label>
       <input id="pens" type="number" min="1" max="1024" value="12" />
 
-      <label>Layers toward center</label>
+      <label>Layers toward center (base)</label>
       <input id="layers" type="number" min="1" max="200" value="24" />
 
       <label>Extra layer density</label>
       <input id="extraLayers" type="number" min="0" max="48" value="2" />
 
-      <label>Spiral?</label>
-      <input id="spiral" type="checkbox" checked />
-
-      <label>Spiral angle (degrees per full radius)</label>
-      <input id="spiralAngle" type="number" min="-360" max="360" value="6" />
+      <div class="row">
+        <label><input id="spiral" type="checkbox" checked /> Spiral</label>
+        <label>Spiral angle
+          <input id="spiralAngle" type="number" min="-360" max="360" value="6" />
+        </label>
+      </div>
 
       <label>Pen tip type</label>
       <select id="penType">
@@ -48,11 +69,14 @@
         <option value="jitter">Jitter</option>
       </select>
 
-      <label>Pen size</label>
-      <input id="penSize" type="range" min="0.5" max="48" step="0.5" value="2" />
-
-      <label>Transparency</label>
-      <input id="alpha" type="range" min="0.01" max="1" step="0.01" value="0.65" />
+      <div class="row">
+        <label>Pen size
+          <input id="penSize" type="range" min="0.5" max="48" step="0.5" value="2" />
+        </label>
+        <label>Transparency
+          <input id="alpha" type="range" min="0.01" max="1" step="0.01" value="0.65" />
+        </label>
+      </div>
 
       <label>Pen color</label>
       <input id="penColor" type="color" value="#7dd3fc" />
@@ -64,18 +88,40 @@
         <option value="rainbow">Rainbow (animated)</option>
       </select>
 
-      <label>Smoothing (higher = smoother)</label>
-      <input id="smoothing" type="range" min="0" max="0.95" step="0.01" value="0.6" />
+      <hr />
+      <h4>Symmetry</h4>
+      <div class="row">
+        <label>Symmetry mode
+          <select id="symmetryMode">
+            <option value="none" selected>None</option>
+            <option value="rotational">Rotational (extra rotations)</option>
+            <option value="mirror">Mirror folds (kaleidoscope)</option>
+          </select>
+        </label>
+        <label>Folds (sectors)
+          <input id="folds" type="number" min="2" max="48" value="6" />
+        </label>
+      </div>
+      <div class="small">
+        <b>Rotational</b>: rotates your stroke into N extra wedges.<br/>
+        <b>Mirror folds</b>: classic kaleidoscope (each wedge mirrored).
+      </div>
 
-      <label>Trail decay (0.86–0.997 — higher = longer trails)</label>
-      <input id="trailDecay" type="range" min="0.86" max="0.997" step="0.001" value="0.925" />
+      <hr />
+      <div class="row">
+        <label>Smoothing
+          <input id="smoothing" type="range" min="0" max="0.95" step="0.01" value="0.6" />
+        </label>
+        <label>Trail decay
+          <input id="trailDecay" type="range" min="0.86" max="0.997" step="0.001" value="0.93" />
+        </label>
+      </div>
 
       <label>Glow intensity (shadow blur)</label>
       <input id="glow" type="range" min="0" max="60" step="1" value="20" />
 
       <label>Quality (performance) — lower = faster</label>
       <input id="quality" type="range" min="0.2" max="1" step="0.05" value="1" />
-      <div class="small">Quality reduces pen/layer detail while drawing to keep it smooth on low-end devices.</div>
 
       <label><input id="pressure" type="checkbox" checked /> Use pen pressure (if supported)</label>
 
@@ -84,11 +130,101 @@
         <button id="replay">Replay</button>
       </div>
 
-      <label><input id="showDots" type="checkbox" checked /> Show pen dots (indicates other pens)</label>
-      <label><input id="dotSize" type="range" min="1" max="24" step="1" value="6" /> Dot size</label>
+      <label><input id="showDots" type="checkbox" checked /> Show pen dots (while drawing only)</label>
+      <div class="row">
+        <label>Dot size
+          <input id="dotSize" type="range" min="1" max="20" step="1" value="6" />
+        </label>
+        <label>Dot density
+          <input id="dotDensity" type="range" min="0.2" max="1" step="0.05" value="0.6" />
+        </label>
+      </div>
 
+      <hr />
+      <h4>Audio Reactive Controls</h4>
+      <div class="row">
+        <input id="audioFile" type="file" accept="audio/*" />
+        <button id="playPause">Play</button>
+        <button id="useMic">Use Mic</button>
+      </div>
+      <div class="row">
+        <label>Sensitivity
+          <input id="audGain" type="range" min="0" max="4" step="0.05" value="1.2" />
+        </label>
+        <label>Audio smoothing
+          <input id="audSmooth" type="range" min="0" max="0.95" step="0.01" value="0.7" />
+        </label>
+      </div>
+      <label>Reactive mode</label>
+      <select id="reactMode">
+        <option value="all">All (radius, spiral, hue, size)</option>
+        <option value="radius">Radius pulses</option>
+        <option value="spiral">Spiral wobble</option>
+        <option value="hue">Hue shift</option>
+        <option value="size">Pen size</option>
+        <option value="mapBands">Map bands: bass→layers, mids→pens, treble→glow</option>
+      </select>
+
+      <div class="row">
+        <label>Ghost pens
+          <input id="ghostCount" type="number" min="0" max="16" value="3" />
+        </label>
+        <label><input id="autoDance" type="checkbox" checked /> Auto-dance ghosts</label>
+      </div>
+
+      <h4>Beat Sync</h4>
+      <div class="row">
+        <label>Beat sensitivity
+          <input id="beatSens" type="range" min="0.5" max="3" step="0.05" value="1.2" />
+        </label>
+        <label>Beat hold (ms)
+          <input id="beatHold" type="number" min="0" max="600" value="140" />
+        </label>
+      </div>
+      <div class="row">
+        <label>Beat pulse size
+          <input id="beatSizeBoost" type="range" min="0" max="2" step="0.05" value="0.6" />
+        </label>
+        <label>Beat glow boost
+          <input id="beatGlowBoost" type="range" min="0" max="60" step="1" value="20" />
+        </label>
+      </div>
+
+      <div class="row" style="gap:12px;align-items:center;margin-top:8px">
+        <span class="chip" id="statusChip">Audio: idle</span>
+        <span class="chip" id="bpmChip">BPM: —</span>
+        <span id="bpmLamp" style="width:12px;height:12px;border-radius:50%;background:#122;display:inline-block;box-shadow:0 0 0 rgba(255,255,255,0)"></span>
+      </div>
+
+      <hr />
+      <h4>Pre-analysis (lag-free file playback)</h4>
+      <div class="row">
+        <button id="analyzeBtn">Analyze File</button>
+        <span id="anaStatus" class="chip">Idle</span>
+      </div>
+      <progress id="anaProg" max="1" value="0"></progress>
+      <div class="small">
+        Analyzes your audio offline (bass/mid/treble envelopes + beats + BPM). Then playback uses a precomputed timeline.
+      </div>
+
+      <hr />
+      <h4>Presets</h4>
+      <div class="row">
+        <input id="presetName" type="text" placeholder="Preset name" />
+        <button id="savePreset">Save</button>
+        <button id="exportPresets">Export</button>
+        <button id="importPresetsBtn">Import</button>
+        <input id="importPresets" type="file" accept="application/json" style="display:none" />
+      </div>
+      <div class="row" style="margin-top:6px">
+        <select id="presetList"></select>
+        <button id="loadPreset">Load</button>
+        <button id="deletePreset">Delete</button>
+      </div>
+
+      <hr />
       <label><input id="gradientBg" type="checkbox" /> Gradient background</label>
-      <div style="display:flex;gap:8px;margin-top:6px">
+      <div class="row">
         <input id="bg1" type="color" value="#020617" />
         <input id="bg2" type="color" value="#06273a" />
       </div>
@@ -96,11 +232,42 @@
       <label>Export scale multiplier</label>
       <input id="exportScale" type="number" min="1" max="8" value="3" />
 
-      <div style="display:flex;gap:8px;margin-top:10px">
+      <div class="row" style="margin-top:10px">
         <button id="clear">Clear</button>
         <button id="export">Export PNG</button>
+        <button id="exportRec">Export Recording (JSON)</button>
+        <button id="importRec">Import Recording</button>
+        <input id="recFile" type="file" accept="application/json" style="display:none" />
       </div>
-      <div class="footer">Per-pen colors, pressure, recording/replay, quality throttling, and pen-dot indicators added. Draw to see dots.</div>
+
+      <hr />
+      <h4>Performance</h4>
+      <div class="row">
+        <label>Render scale (live) <span class="small">(0.3–1.0)</span>
+          <input id="renderScale" type="range" min="0.3" max="1" step="0.05" value="0.7" />
+        </label>
+        <label>Dynamic throttle
+          <select id="dynThrottle">
+            <option value="on" selected>On (auto)</option>
+            <option value="off">Off</option>
+          </select>
+        </label>
+      </div>
+      <div class="row">
+        <label>Glow mode
+          <select id="glowMode">
+            <option value="shadow" selected>Shadow blur</option>
+            <option value="add">Additive only</option>
+            <option value="off">Off</option>
+          </select>
+        </label>
+        <label><input id="perfDefaults" type="checkbox" /> Safer defaults on load</label>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <button id="freezeBtn">Freeze (rasterize)</button>
+        <button id="unfreezeBtn">Unfreeze</button>
+      </div>
+
     </div>
 
     <div class="canvas-wrap">
@@ -109,326 +276,1062 @@
     </div>
   </div>
 
-<script>
-(() => {
-  const canvas = document.getElementById('c');
-  const trail = document.getElementById('trail');
-  const ctx = canvas.getContext('2d');
-  const tctx = trail.getContext('2d');
+  <div class="panel" style="grid-column: 1 / span 2; margin:12px">
+    <h3>Headless 4K Render</h3>
+    <div class="row">
+      <label>Duration (s)<input id="renderDur" type="number" min="1" max="600" value="30" /></label>
+      <label>FPS<input id="renderFps" type="number" min="10" max="60" value="60" /></label>
+      <label>Bitrate (kbps)<input id="renderKbps" type="number" min="1000" max="50000" value="16000" /></label>
+    </div>
+    <div class="row">
+      <label>Seed<input id="renderSeed" type="number" min="0" max="999999" value="1337" /></label>
+      <label><input id="renderUsePre" type="checkbox" checked /> Use pre-analysis timeline (faster)</label>
+      <label><input id="renderMapBands" type="checkbox" /> Use Map bands mode during render</label>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button id="render4k">Render 4K WebM</button>
+      <span class="chip" id="renderStatus">Idle</span>
+    </div>
+    <progress id="renderProg" max="1" value="0" style="width:100%;margin-top:6px"></progress>
+    <div class="small">Renders to 3840×2160 using precomputed audio when available.</div>
+  </div>
 
-  function fitCanvas(el){
-    const rect = el.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    el.width = Math.max(1, Math.floor(rect.width * dpr));
-    el.height = Math.max(1, Math.floor(rect.height * dpr));
-    const ctx2 = el.getContext('2d');
-    ctx2.setTransform(dpr,0,0,dpr,0,0);
-  }
+  <div class="panel" style="grid-column: 1 / span 2; margin:12px">
+    <h3>PNG Sequence Export</h3>
+    <div class="row">
+      <label>Resolution
+        <select id="pngRes">
+          <option value="4k">4K (3840×2160)</option>
+          <option value="8k">8K (7680×4320)</option>
+        </select>
+      </label>
+      <label>Duration (s)<input id="pngDur" type="number" min="1" max="120" value="5" /></label>
+      <label>FPS<input id="pngFps" type="number" min="1" max="60" value="30" /></label>
+    </div>
+    <div class="row">
+      <label>Prefix<input id="pngPrefix" placeholder="frame_" value="frame_" /></label>
+      <label>Start index<input id="pngStart" type="number" min="0" max="100000" value="0" /></label>
+      <label><input id="pngUsePre" type="checkbox" checked /> Use pre-analysis timeline</label>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button id="exportPngSeq">Export PNG Sequence</button>
+      <span class="chip" id="pngStatus">Idle</span>
+    </div>
+    <progress id="pngProg" max="1" value="0" style="width:100%;margin-top:6px"></progress>
+    <div class="small">Your browser may ask to allow multiple downloads.</div>
+  </div>
 
-  function resize(){
-    fitCanvas(canvas);
-    fitCanvas(trail);
-    drawBackgroundImmediate();
-  }
-  window.addEventListener('resize', resize);
-  setTimeout(resize,50);
+  <script>
+  (() => {
+    const canvas = document.getElementById('c');
+    const trail = document.getElementById('trail');
+    const ctx = canvas.getContext('2d');
+    const tctx = trail.getContext('2d', { alpha: true, desynchronized: true });
+    const statusChip = document.getElementById('statusChip');
+    const anaStatus = document.getElementById('anaStatus');
+    const anaProg = document.getElementById('anaProg');
+    let frozenBitmap=null, isFrozen=false;
 
-  const $ = id => document.getElementById(id);
-  function S(){
-    return {
-      pens: Math.max(1, Math.min(2048, parseInt($('pens').value)||12)),
-      layers: Math.max(1, Math.min(500, parseInt($('layers').value)||24)),
-      extraLayers: Math.max(0, Math.min(96, parseInt($('extraLayers').value)||2)),
-      spiral: $('spiral').checked,
-      spiralAngle: (parseFloat($('spiralAngle').value)||0) * Math.PI/180,
-      penType: $('penType').value,
-      penSize: parseFloat($('penSize').value)||2,
-      alpha: parseFloat($('alpha').value)||0.65,
-      color: $('penColor').value || '#7dd3fc',
-      colorMode: $('colorMode').value || 'single',
-      smoothing: parseFloat($('smoothing').value)||0.6,
-      trailDecay: parseFloat($('trailDecay').value)||0.93,
-      glow: parseFloat($('glow').value)||20,
-      gradientBg: $('gradientBg').checked,
-      bg1: $('bg1').value,
-      bg2: $('bg2').value,
-      exportScale: Math.max(1, parseInt($('exportScale').value)||3),
-      quality: parseFloat($('quality').value)||1,
-      usePressure: $('pressure').checked,
-      showDots: $('showDots').checked,
-      dotSize: parseFloat($('dotSize').value)||6
-    };
-  }
+    const $ = id => document.getElementById(id);
+    function clampNum(v,min,max,def){ v=parseFloat(v); return isNaN(v)?def:Math.max(min,Math.min(max,v)); }
+    function clampInt(v,min,max,def){ v=parseInt(v); return isNaN(v)?def:Math.max(min,Math.min(max,v)); }
+    function hexToRgba(hex,a=1){ const h=hex.replace('#',''); const bi=parseInt(h,16); return `rgba(${(bi>>16)&255},${(bi>>8)&255},${bi&255},${a})`; }
 
-  function hexToRgba(hex,a=1){
-    const h = hex.replace('#','');
-    const bi = parseInt(h,16);
-    return `rgba(${(bi>>16)&255},${(bi>>8)&255},${bi&255},${a})`;
-  }
+    // unified metrics so centers match even when renderScale ≠ 1
+    function getMetrics(el){
+      const rect = el.getBoundingClientRect();
+      const dpr  = (window.devicePixelRatio || 1);
+      const rs   = (el === trail) ? parseFloat(($('renderScale').value)||'1') : 1;
+      const scale = dpr * rs;
+      return { rect, dpr, rs, scale, w: el.width/scale, h: el.height/scale, cx: rect.width/2, cy: rect.height/2 };
+    }
 
-  // draw background on trail canvas
-  function drawBackgroundImmediate(){
-    const s=S();
-    const w = trail.width/(window.devicePixelRatio||1);
-    const h = trail.height/(window.devicePixelRatio||1);
-    tctx.globalCompositeOperation = 'source-over';
-    tctx.globalAlpha = 1;
-    if(s.gradientBg){
-      const g = tctx.createLinearGradient(0,0,w,h); g.addColorStop(0,s.bg1); g.addColorStop(1,s.bg2); tctx.fillStyle=g;
-    } else { tctx.fillStyle = s.bg1; }
-    tctx.fillRect(0,0,w,h);
-    ctx.clearRect(0,0,w,h);
-  }
-
-  // trail fade loop
-  let rafId=null;
-  function trailLoop(){
-    const s=S();
-    const w = trail.width/(window.devicePixelRatio||1);
-    const h = trail.height/(window.devicePixelRatio||1);
-    tctx.globalCompositeOperation = 'source-over';
-    const fadeAlpha = 1 - s.trailDecay;
-    tctx.fillStyle = `rgba(0,0,0,${fadeAlpha})`;
-    tctx.fillRect(0,0,w,h);
-    rafId = requestAnimationFrame(trailLoop);
-  }
-  rafId = requestAnimationFrame(trailLoop);
-
-  // pointer smoothing using EMA per pointer
-  const pointers = new Map();
-
-  function getCanvasPoint(evt, el){
-    const rect = el.getBoundingClientRect();
-    return { x: evt.clientX - rect.left, y: evt.clientY - rect.top };
-  }
-
-  // Recording data structure
-  const recording = [];
-  let isRecording = false;
-  let recordStart = 0;
-
-  function startRecording(){ recording.length = 0; isRecording = true; recordStart = performance.now(); $('record').textContent = 'Stop Recording'; }
-  function stopRecording(){ isRecording = false; $('record').textContent = 'Start Recording'; }
-
-  // Replay controls
-  let isReplaying = false;
-  function replayRecording(){
-    if(recording.length === 0) return alert('No recording found.');
-    if(isReplaying) return;
-    isReplaying = true;
-    drawBackgroundImmediate();
-    const start = recording[0].t;
-    let i = 0;
-    function step(){
-      if(i >= recording.length){ isReplaying = false; return; }
-      const item = recording[i++];
-      if(item.type === 'down'){
-        pointers.set('replay', { x: item.x, y: item.y, rawX: item.x, rawY: item.y, vx:0, vy:0 });
-        drawPenDotsAll();
-      } else if(item.type === 'move'){
-        const prev = pointers.get('replay');
-        if(prev){
-          drawSmartStroke(prev.x, prev.y, item.x, item.y, item.pressure || 0.5, item.settings || null);
-          pointers.set('replay', { x: item.x, y: item.y, rawX: item.x, rawY: item.y });
-          drawPenDotsAll();
-        }
-      } else if(item.type === 'up'){
-        pointers.delete('replay');
-        drawPenDotsAll();
-      }
-      if(i < recording.length){
-        const delay = Math.max(0, recording[i].t - item.t);
-        setTimeout(step, delay);
-      } else {
-        isReplaying = false;
+    // size / resize
+    function fitCanvas(el, scale=1){
+      const rect = el.getBoundingClientRect();
+      const dpr = (window.devicePixelRatio || 1) * scale;
+      el.width = Math.max(1, Math.floor(rect.width * dpr));
+      el.height = Math.max(1, Math.floor(rect.height * dpr));
+      const g = el.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0);
+    }
+    function resize(){
+      const rs = parseFloat(($('renderScale').value)||'1');
+      fitCanvas(canvas, 1); fitCanvas(trail, rs);
+      cacheLayerTransforms(true);
+      drawBackgroundImmediate();
+      if(isFrozen && frozenBitmap){
+        const tm=getMetrics(trail); tctx.drawImage(frozenBitmap,0,0,tm.w,tm.h);
       }
     }
-    step();
-  }
+    window.addEventListener('resize', resize);
+    setTimeout(resize, 50);
 
-  // pointer handlers
-  function handleDown(e){
-    if(e.pointerType==='mouse' && e.button !== 0) return;
-    canvas.setPointerCapture(e.pointerId);
-    const pt = getCanvasPoint(e, canvas);
-    const pressure = (S().usePressure ? (e.pressure || 0.5) : 0.5);
-    pointers.set(e.pointerId, { rawX: pt.x, rawY: pt.y, x: pt.x, y: pt.y, vx:0, vy:0, p:pressure });
-    drawPenDotsAll();
-    if(isRecording){ recording.push({type:'down', x:pt.x, y:pt.y, pressure, t:performance.now()-recordStart, settings: S()}); }
-  }
-  function handleMove(e){
-    if(!pointers.has(e.pointerId)) return;
-    const s = S();
-    const entry = pointers.get(e.pointerId);
-    const raw = getCanvasPoint(e, canvas);
-    const pressure = (s.usePressure ? (e.pressure || entry.p || 0.5) : 0.5);
-    const alpha = 1 - s.smoothing;
-    const nx = entry.x * s.smoothing + raw.x * alpha;
-    const ny = entry.y * s.smoothing + raw.y * alpha;
-    entry.vx = nx - entry.x; entry.vy = ny - entry.y; entry.rawX = raw.x; entry.rawY = raw.y; entry.x = nx; entry.y = ny; entry.p = pressure;
+    let audioOverrides=null, analysis=null, usePrecomputed=false, hueOffset=0;
 
-    const now = performance.now();
-    if(!entry.lastDraw || now - entry.lastDraw > (20 / s.quality)){
-      drawSmartStroke(entry.x - entry.vx, entry.y - entry.vy, entry.x, entry.y, pressure);
-      entry.lastDraw = now;
-    }
+    function S(){
+      const s={
+        pens: clampInt($('pens').value,1,1024,12),
+        layers: clampInt($('layers').value,1,200,24),
+        extraLayers: clampInt($('extraLayers').value,0,48,2),
+        spiral: $('spiral').checked,
+        spiralAngle: (parseFloat($('spiralAngle').value)||0) * Math.PI/180,
+        // symmetry
+        symmetryMode: $('symmetryMode').value,
+        folds: clampInt($('folds').value,2,48,6),
 
-    drawPenDotsAll();
-
-    if(isRecording){ recording.push({type:'move', x:entry.x, y:entry.y, pressure, t:performance.now()-recordStart}); }
-  }
-  function handleUp(e){
-    if(pointers.has(e.pointerId)){
-      const pt = getCanvasPoint(e, canvas);
-      if(isRecording){ recording.push({type:'up', x:pt.x, y:pt.y, pressure: (e.pressure||0.5), t:performance.now()-recordStart}); }
-      pointers.delete(e.pointerId);
-      try{ canvas.releasePointerCapture(e.pointerId); } catch(_){}
-      drawPenDotsAll();
-    }
-  }
-
-  canvas.addEventListener('pointerdown', handleDown);
-  canvas.addEventListener('pointermove', handleMove);
-  canvas.addEventListener('pointerup', handleUp);
-  canvas.addEventListener('pointercancel', handleUp);
-
-  // per-pen color generator
-  function penColorFor(p, s, tAnim=0){
-    if(s.colorMode === 'single') return s.color;
-    if(s.colorMode === 'perPen'){
-      const hue = Math.round((p / Math.max(1, s.pens)) * 360);
-      return `hsl(${hue} 85% 60%)`;
-    }
-    const hue = Math.round(((p / Math.max(1, s.pens)) * 360 + tAnim) % 360);
-    return `hsl(${hue} 85% 60%)`;
-  }
-
-  // draw pen dots on the top canvas to indicate where each replicated pen will draw
-  function drawPenDotsAll(){
-    const s = S();
-    // clear overlay
-    const w = canvas.width/(window.devicePixelRatio||1);
-    const h = canvas.height/(window.devicePixelRatio||1);
-    ctx.clearRect(0,0,w,h);
-    if(!s.showDots) return;
-    // draw for each active pointer
-    const tAnim = (performance.now() * 0.02) % 360;
-    const penSkip = Math.max(1, Math.round(1 / s.quality));
-    for(const [id, entry] of pointers){
-      // draw a dot for each pen
-      for(let p=0;p<s.pens;p+=penSkip){
-        const angle = p * (2*Math.PI / s.pens);
-        const cos = Math.cos(angle), sin = Math.sin(angle);
-        const dx = entry.x - w/2, dy = entry.y - h/2;
-        const rx = w/2 + (dx * cos - dy * sin);
-        const ry = h/2 + (dx * sin + dy * cos);
-        const col = penColorFor(p, s, tAnim);
-        ctx.beginPath();
-        ctx.arc(rx, ry, Math.max(1, s.dotSize * (1 - (p%2)*0.1)), 0, Math.PI*2);
-        // fill with pen color but subtle alpha
-        if(col.startsWith('hsl')) ctx.fillStyle = col.replace(')', ' / 80% )');
-        else ctx.fillStyle = hexToRgba(col, 0.85);
-        ctx.fill();
-        // small outline
-        ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 0.5; ctx.stroke();
+        penType: $('penType').value,
+        penType: $('penType').value,
+        penSize: clampNum($('penSize').value,0.5,48,2),
+        alpha: clampNum($('alpha').value,0.01,1,0.65),
+        color: $('penColor').value || '#7dd3fc',
+        colorMode: $('colorMode').value || 'single',
+        smoothing: clampNum($('smoothing').value,0,0.95,0.6),
+        trailDecay: clampNum($('trailDecay').value,0.86,0.997,0.93),
+        glow: clampNum($('glow').value,0,60,20),
+        gradientBg: $('gradientBg').checked,
+        bg1: $('bg1').value, bg2: $('bg2').value,
+        exportScale: clampInt($('exportScale').value,1,8,3),
+        quality: clampNum($('quality').value,0.2,1,1),
+        usePressure: $('pressure').checked,
+        showDots: $('showDots').checked,
+        dotSize: clampNum($('dotSize').value,1,20,6),
+        dotDensity: clampNum($('dotDensity').value,0.2,1,0.6),
+        audGain: clampNum($('audGain').value,0,4,1.2),
+        audSmooth: clampNum($('audSmooth').value,0,0.95,0.7),
+        reactMode: $('reactMode').value,
+        autoDance: $('autoDance').checked,
+        ghostCount: clampInt($('ghostCount').value,0,16,3),
+        beatSens: clampNum($('beatSens').value,0.5,3,1.2),
+        beatHold: clampInt($('beatHold').value,0,600,140),
+        beatSizeBoost: clampNum($('beatSizeBoost').value,0,2,0.6),
+        beatGlowBoost: clampNum($('beatGlowBoost').value,0,60,20)
+      };
+      if(audioOverrides){
+        if(audioOverrides.pens) s.pens=Math.max(1,Math.round(audioOverrides.pens));
+        if(audioOverrides.layers) s.layers=Math.max(1,Math.round(audioOverrides.layers));
+        if(audioOverrides.glow!=null) s.glow=audioOverrides.glow;
+        if(audioOverrides.spiralAngle!=null) s.spiralAngle=audioOverrides.spiralAngle;
       }
+      return s;
     }
-  }
 
-  // main stroke function: draws into trail canvas using many interpolated steps and glow
-  function drawSmartStroke(x0,y0,x1,y1, pressure=0.5, overrideSettings=null){
-    const s = overrideSettings || S();
-    const quality = s.quality;
-    const w = trail.width/(window.devicePixelRatio||1);
-    const h = trail.height/(window.devicePixelRatio||1);
-    const cx = w/2, cy = h/2;
-
-    const speed = Math.hypot(x1-x0,y1-y0);
-    const speedFactor = Math.min(3, 1 + speed*0.02);
-    const baseWidth = s.penSize * speedFactor * (0.6 + pressure*1.4);
-
-    const segments = Math.max(1, Math.round(Math.hypot(x1-x0,y1-y0) / (2 / quality)));
-    const totalSub = Math.max(1, Math.round(s.layers * (s.extraLayers + 1) * quality));
-    const tAnim = (performance.now() * 0.02) % 360;
-
-    for(let seg=0; seg<segments; seg++){
-      const u0 = seg/segments; const u1 = (seg+1)/segments;
-      const sx0 = x0 + (x1-x0)*u0; const sy0 = y0 + (y1-y0)*u0;
-      const sx1 = x0 + (x1-x0)*u1; const sy1 = y0 + (y1-y0)*u1;
-
-      for(let st=0; st<totalSub; st++){
-        const t = st / Math.max(1, totalSub-1);
+    // --- Cache transforms for layers + pen angles ---
+    let cached={key:'',steps:[],cos:null,sin:null};
+    function cacheLayerTransforms(force=false){
+      const s=S();
+      const total=Math.max(1,Math.round(s.layers*(s.extraLayers+1)));
+      const key=[Math.round(s.layers),Math.round(s.extraLayers),s.spiral,s.spiralAngle.toFixed(6),s.pens].join('|');
+      if(!force && cached.key===key && cached.steps.length===total && cached.cos && cached.cos.length===s.pens) return;
+      cached.key=key; cached.steps.length=0;
+      for(let st=0; st<total; st++){
+        const t = st / Math.max(1, total-1);
         const scale = 1 - t*0.95;
         const spiralRot = s.spiral ? (t * s.spiralAngle * s.layers) : 0;
-        const layerAlphaBase = s.alpha * (1 - t*0.72);
-        const penSkip = Math.max(1, Math.round(1 / quality));
+        cached.steps.push({ t, scale, spiralRot, alphaMul:(1 - t*0.72), widthMul:(1 - t*0.8), glowMul:(1 - t*0.6) });
+      }
+      cached.cos=new Float32Array(s.pens); cached.sin=new Float32Array(s.pens);
+      for(let p=0;p<s.pens;p++){ const a=p*(2*Math.PI/s.pens); cached.cos[p]=Math.cos(a); cached.sin[p]=Math.sin(a); }
+    }
 
-        for(let p=0;p<s.pens;p+=penSkip){
-          const penAngle = p * (2*Math.PI / s.pens);
-          const cosP = Math.cos(penAngle), sinP = Math.sin(penAngle);
+    // --- Background ---
+    function drawBackgroundImmediate(){
+      const tm=getMetrics(trail);
+      tctx.save(); tctx.setTransform(1,0,0,1,0,0);
+      if(S().gradientBg){
+        const g=tctx.createLinearGradient(0,0,tm.w,tm.h);
+        g.addColorStop(0,S().bg1); g.addColorStop(1,S().bg2);
+        tctx.fillStyle=g;
+      } else tctx.fillStyle=S().bg1;
+      tctx.fillRect(0,0,tm.w,tm.h);
+      tctx.restore();
+      const cm=getMetrics(canvas); ctx.clearRect(0,0,cm.w,cm.h);
+    }
 
-          let ax0 = (sx0 - cx) * scale, ay0 = (sy0 - cy) * scale;
-          let ax1 = (sx1 - cx) * scale, ay1 = (sy1 - cy) * scale;
-          const sr = Math.cos(spiralRot), si = Math.sin(spiralRot);
-          const rx0c = ax0*sr - ay0*si, ry0c = ax0*si + ay0*sr;
-          const rx1c = ax1*sr - ay1*si, ry1c = ax1*si + ay1*sr;
+    // --- Color helper ---
+    function penColorFor(p,s,tAnim=0){
+      if(s.colorMode==='single') return s.color;
+      if(s.colorMode==='perPen'){
+        const hue=Math.round((p/Math.max(1,s.pens))*360);
+        return `hsl(${hue} 85% 60%)`;
+      }
+      const hue=Math.round(((p/Math.max(1,s.pens))*360 + tAnim + 0)%360);
+      return `hsl(${hue} 85% 60%)`;
+    }
 
-          const rx0 = cx + (rx0c * cosP - ry0c * sinP);
-          const ry0 = cy + (rx0c * sinP + ry0c * cosP);
-          const rx1 = cx + (rx1c * cosP - ry1c * sinP);
-          const ry1 = cy + (rx1c * sinP + ry1c * cosP);
+    // --- Symmetry helper ---
+    // Returns an array of transformed segment endpoints for symmetry mode.
+    function symmetrySegments(x0,y0,x1,y1, s, cx,cy){
+      const out=[];
+      const mode=s.symmetryMode;
+      if(mode==='none'){ out.push({x0,y0,x1,y1}); return out; }
+      const folds=Math.max(2, s.folds|0);
+      const sector= (Math.PI*2)/folds;
 
-          tctx.beginPath(); tctx.moveTo(rx0, ry0);
-          if(s.penType === 'weave'){
-            const mx = (rx0+rx1)/2; const my = (ry0+ry1)/2;
-            const dx = rx1-rx0, dy = ry1-ry0; const len = Math.hypot(dx,dy)||1;
-            const nx = -dy/len, ny = dx/len; const wig = (Math.sin(p*1.9 + st*0.35) * 0.5) * (10*(1-t));
-            tctx.quadraticCurveTo(mx + nx*wig, my + ny*wig, rx1, ry1);
-          } else if(s.penType === 'jitter'){
-            tctx.lineTo(rx1 + (Math.random()-0.5)*6*(1-t), ry1 + (Math.random()-0.5)*6*(1-t));
-          } else { tctx.lineTo(rx1, ry1); }
+      function rot(px,py,a){ const dx=px-cx, dy=py-cy; const c=Math.cos(a), sn=Math.sin(a); return {x: cx + dx*c - dy*sn, y: cy + dx*sn + dy*c}; }
+      function reflectAcrossAngle(px,py, angMid){
+        // reflect across the line through center at angle angMid
+        const dx=px-cx, dy=py-cy;
+        const c=Math.cos(angMid), s2=Math.sin(angMid);
+        // rotate so line is x-axis
+        const rx =  dx*c + dy*s2;
+        const ry = -dx*s2 + dy*c;
+        // reflect across x-axis: (rx, ry) -> (rx, -ry)
+        const ry2 = -ry;
+        // rotate back
+        return { x: cx + rx*c - ry2*s2, y: cy + rx*s2 + ry2*c };
+      }
 
-          const penCol = penColorFor(p, s, tAnim);
-          tctx.globalCompositeOperation = 'lighter';
-          const layerAlpha = Math.max(0.01, layerAlphaBase * (0.5 + pressure*0.75));
-          if(penCol.startsWith('hsl')){ tctx.strokeStyle = penCol.replace(')', ` / ${Math.round(layerAlpha*100)}% )`); }
-          else { tctx.strokeStyle = hexToRgba(penCol, layerAlpha); }
-          tctx.lineWidth = Math.max(0.2, baseWidth * (1 - t*0.8));
-          tctx.shadowBlur = S().glow * (1 - t*0.6);
-          tctx.shadowColor = (penCol.startsWith('hsl')) ? penCol : hexToRgba(penCol, 0.9);
-          tctx.stroke(); tctx.shadowBlur = 0;
+      if(mode==='rotational'){
+        for(let k=0;k<folds;k++){
+          const a=k*sector;
+          const p0=rot(x0,y0,a); const p1=rot(x1,y1,a);
+          out.push({x0:p0.x,y0:p0.y,x1:p1.x,y1:p1.y});
+        }
+      } else if(mode==='mirror'){
+        // Classic kaleidoscope: rotate each fold and mirror every other fold across its center line.
+        for(let k=0;k<folds;k++){
+          const a=k*sector;
+          const mid=a + sector*0.5;
+          const rp0=rot(x0,y0,a), rp1=rot(x1,y1,a);
+          if(k%2===0){
+            out.push({x0:rp0.x,y0:rp0.y,x1:rp1.x,y1:rp1.y});
+          } else {
+            const mp0=reflectAcrossAngle(rp0.x,rp0.y, mid);
+            const mp1=reflectAcrossAngle(rp1.x,rp1.y, mid);
+            out.push({x0:mp0.x,y0:mp0.y,x1:mp1.x,y1:mp1.y});
+          }
+        }
+      }
+      return out;
+    }
+
+    // --- Stroke drawing (CSS px coords + symmetry) ---
+    function drawSmartStroke(x0,y0,x1,y1, pressure=0.5, override=null){
+      if(isFrozen) return;
+      const s = override || S();
+      const tm=getMetrics(trail);
+      const cx=tm.cx, cy=tm.cy;
+      cacheLayerTransforms();
+      const steps=cached.steps;
+
+      // symmetry segments first
+      const segs = symmetrySegments(x0,y0,x1,y1, s, cx,cy);
+
+      const speed=Math.hypot(x1-x0,y1-y0);
+      const speedFactor=Math.min(3,1+speed*0.02);
+      let baseWidth=s.penSize*speedFactor*(0.6+pressure*1.4);
+
+      const dynOn = document.getElementById('dynThrottle').value==='on';
+      const startT = dynOn?performance.now():0;
+      let penSkip=Math.max(1, Math.round(1/s.quality));
+      let layerSkip=1; const maxMs=10;
+      const tAnim=(performance.now()*0.02)%360;
+      const gm=document.getElementById('glowMode').value;
+
+      for(const seg of segs){
+        // split long moves per segment for smoothness
+        const segments = Math.max(1, Math.round(Math.hypot(seg.x1-seg.x0,seg.y1-seg.y0)/(2/s.quality)));
+        for(let sg=0; sg<segments; sg++){
+          const u0=sg/segments, u1=(sg+1)/segments;
+          const sx0=seg.x0+(seg.x1-seg.x0)*u0, sy0=seg.y0+(seg.y1-seg.y0)*u0;
+          const sx1=seg.x0+(seg.x1-seg.x0)*u1, sy1=seg.y0+(seg.y1-seg.y0)*u1;
+
+          for(let i=0;i<steps.length;i+=layerSkip){
+            const st=steps[i];
+            const sr=Math.cos(st.spiralRot), si=Math.sin(st.spiralRot);
+
+            let ax0=(sx0-cx)*st.scale, ay0=(sy0-cy)*st.scale;
+            let ax1=(sx1-cx)*st.scale, ay1=(sy1-cy)*st.scale;
+
+            const rx0c=ax0*sr - ay0*si, ry0c=ax0*si + ay0*sr;
+            const rx1c=ax1*sr - ay1*si, ry1c=ax1*si + ay1*sr;
+
+            for(let p=0;p<s.pens;p+=penSkip){
+              const c=cached.cos[p], siP=cached.sin[p];
+              const rx0=cx + (rx0c*c - ry0c*siP), ry0=cy + (rx0c*siP + ry0c*c);
+              const rx1=cx + (rx1c*c - ry1c*siP), ry1=cy + (rx1c*siP + ry1c*c);
+
+              tctx.beginPath();
+              tctx.moveTo(rx0,ry0);
+              if(s.penType==='weave'){
+                const mx=(rx0+rx1)/2, my=(ry0+ry1)/2;
+                const dx=rx1-rx0, dy=ry1-ry0; const len=Math.hypot(dx,dy)||1;
+                const nx=-dy/len, ny=dx/len;
+                const wig=(Math.sin(p*1.9 + i*0.35) * 0.5) * (10*(1-st.t));
+                tctx.quadraticCurveTo(mx+nx*wig, my+ny*wig, rx1,ry1);
+              } else if(s.penType==='jitter'){
+                tctx.lineTo(rx1 + (Math.random()-0.5)*6*(1-st.t), ry1 + (Math.random()-0.5)*6*(1-st.t));
+              } else {
+                tctx.lineTo(rx1,ry1);
+              }
+
+              const penCol=penColorFor(p,s,tAnim);
+              tctx.globalCompositeOperation= gm==='off'?'source-over':'lighter';
+              const layerAlpha=Math.max(0.01, s.alpha*st.alphaMul*(0.5+pressure*0.75));
+              if(penCol.startsWith('hsl')) tctx.strokeStyle = penCol.replace(')', ` / ${Math.round(layerAlpha*100)}% )`);
+              else tctx.strokeStyle = hexToRgba(penCol, layerAlpha);
+              tctx.lineWidth=Math.max(0.2, baseWidth*st.widthMul);
+              tctx.shadowBlur = gm==='shadow'? s.glow*st.glowMul : 0;
+              tctx.shadowColor = penCol.startsWith('hsl')?penCol:hexToRgba(penCol,0.9);
+              tctx.stroke();
+
+              if(dynOn && (performance.now()-startT)>maxMs){
+                penSkip=Math.min(penSkip*2, 16);
+                layerSkip = Math.min(layerSkip*2, 8);
+              }
+            }
+          }
         }
       }
     }
-  }
 
-  // clear
-  $('clear').addEventListener('click', ()=>{ drawBackgroundImmediate(); ctx.clearRect(0,0,canvas.width,canvas.height); });
+    // --- Dot preview (visible only while drawing, not during replay) + symmetry ---
+    function drawPenDotsAll(pt){
+      const s=S();
+      const cm=getMetrics(canvas);
+      if(!s.showDots || isReplaying || !pt){ ctx.clearRect(0,0,cm.w,cm.h); return; }
+      const cx=cm.cx, cy=cm.cy;
 
-  // export: composite trail + top canvas onto high-res canvas
-  $('export').addEventListener('click', ()=>{
-    const s=S();
-    const scale = s.exportScale;
-    const w = trail.width * scale;
-    const h = trail.height * scale;
-    const off = document.createElement('canvas'); off.width=w; off.height=h;
-    const o = off.getContext('2d');
-    if(s.gradientBg){ const g = o.createLinearGradient(0,0,w,h); g.addColorStop(0,s.bg1); g.addColorStop(1,s.bg2); o.fillStyle=g; }
-    else o.fillStyle = s.bg1;
-    o.fillRect(0,0,w,h);
-    o.drawImage(trail, 0, 0, w, h);
-    o.drawImage(canvas, 0, 0, w, h);
-    off.toBlob(b=>{ const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download='silk_kaleidoscope.png'; a.click(); URL.revokeObjectURL(a.href); }, 'image/png');
-  });
+      cacheLayerTransforms();
+      const steps=cached.steps;
+      const layerSkip=Math.max(1, Math.round(1/Math.max(0.2,s.dotDensity)));
+      const penSkip=Math.max(1, Math.round(1/s.quality));
 
-  // record/replay buttons
-  $('record').addEventListener('click', ()=>{ if(isRecording) stopRecording(); else startRecording(); });
-  $('replay').addEventListener('click', ()=>{ if(isRecording) stopRecording(); replayRecording(); });
+      // build symmetry anchor points for the single mouse point
+      const segs = symmetrySegments(pt.x,pt.y, pt.x,pt.y, s, cx,cy); // x0==x1 gives a single point per sym
+      ctx.clearRect(0,0,cm.w,cm.h);
 
-  // redraw background when bg settings change
-  ['input','change'].forEach(ev=>{ ['gradientBg','bg1','bg2'].forEach(id=>document.getElementById(id).addEventListener(ev, drawBackgroundImmediate)); });
+      for(const seg of segs){
+        const px=seg.x0, py=seg.y0;
+        for(let p=0;p<s.pens;p+=penSkip){
+          const cosP=cached.cos[p], sinP=cached.sin[p];
+          const col=penColorFor(p,s,0);
+          ctx.fillStyle = col.startsWith('hsl') ? col.replace(')', ' / 85% )') : hexToRgba(col,0.85);
+          for(let i=0;i<steps.length;i+=layerSkip){
+            const st=steps[i];
+            const sr=Math.cos(st.spiralRot), si=Math.sin(st.spiralRot);
+            let ax=(px-cx)*st.scale, ay=(py-cy)*st.scale;
+            const rx0c=ax*sr - ay*si, ry0c=ax*si + ay*sr;
+            const fx=cx + (rx0c*cosP - ry0c*sinP);
+            const fy=cy + (rx0c*sinP + ry0c*cosP);
+            const r = Math.max(1, s.dotSize * (0.8*st.scale + 0.2));
+            ctx.beginPath(); ctx.arc(fx,fy,r,0,Math.PI*2); ctx.fill();
+          }
+        }
+      }
+    }
 
-})();
-</script>
+    // --- Trail fade loop (keeps the silky motion) ---
+    function trailLoop(){
+      const s=S();
+      if(isFrozen){ requestAnimationFrame(trailLoop); return; }
+      const tm=getMetrics(trail);
+      tctx.globalCompositeOperation='source-over';
+      tctx.fillStyle = `rgba(0,0,0,${1 - s.trailDecay})`;
+      tctx.fillRect(0,0,tm.w,tm.h);
+      requestAnimationFrame(trailLoop);
+    }
+    requestAnimationFrame(trailLoop);
+
+    // --- Recording & replay (records raw pointer; symmetry is applied live) ---
+    const recording=[]; let isRecording=false; let recordStart=0; let isReplaying=false;
+
+    function startRecording(){ recording.length=0; isRecording=true; recordStart=performance.now(); $('record').textContent='Stop Recording'; }
+    function stopRecording(){ isRecording=false; $('record').textContent='Start Recording'; }
+
+    function replayRecording(){
+      if(recording.length===0) return alert('No recording found.');
+      if(isReplaying) return;
+      isReplaying=true; drawBackgroundImmediate();
+      let i=0, prevPt=null;
+      function step(){
+        if(i>=recording.length){ isReplaying=false; return; }
+        const ev=recording[i++];
+        if(ev.type==='down'){ prevPt={x:ev.x,y:ev.y}; }
+        else if(ev.type==='move'){
+          if(prevPt){
+            drawSmartStroke(prevPt.x,prevPt.y,ev.x,ev.y,ev.pressure||0.5,ev.settings||null);
+            prevPt={x:ev.x,y:ev.y};
+          }
+        } else if(ev.type==='up'){ prevPt=null; }
+        if(i<recording.length) setTimeout(step, Math.max(0, recording[i].t - ev.t));
+      }
+      step();
+    }
+
+    $('record').addEventListener('click', ()=> isRecording?stopRecording():startRecording());
+    $('replay').addEventListener('click', ()=>{ if(isRecording) stopRecording(); replayRecording(); });
+
+    // --- Pointer input (mouse/pen) ---
+    let drawing=false, last={x:0,y:0};
+    canvas.addEventListener('pointerdown', e=>{
+      if(e.pointerType==='mouse' && e.button!==0) return;
+      canvas.setPointerCapture(e.pointerId);
+      drawing=true;
+      last={x:e.offsetX,y:e.offsetY};
+      drawPenDotsAll(last);
+      if(isRecording) recording.push({type:'down',x:last.x,y:last.y,pressure:e.pressure||0.5,t:performance.now()-recordStart,settings:S()});
+    });
+    canvas.addEventListener('pointermove', e=>{
+      if(!drawing) { drawPenDotsAll({x:e.offsetX,y:e.offsetY}); return; }
+      const s=S();
+      const raw={x:e.offsetX,y:e.offsetY};
+      const a=1-s.smoothing;
+      const nx=last.x*s.smoothing+raw.x*a;
+      const ny=last.y*s.smoothing+raw.y*a;
+      drawSmartStroke(last.x,last.y,nx,ny, s.usePressure?(e.pressure||0.5):0.5);
+      last={x:nx,y:ny};
+      drawPenDotsAll(last);
+      if(isRecording) recording.push({type:'move',x:nx,y:ny,pressure:e.pressure||0.5,t:performance.now()-recordStart});
+    });
+    function endPointer(e){
+      if(!drawing) return; drawing=false;
+      const pt={x:e.offsetX,y:e.offsetY};
+      drawPenDotsAll(null);
+      if(isRecording) recording.push({type:'up',x:pt.x,y:pt.y,pressure:e.pressure||0.5,t:performance.now()-recordStart});
+      try{ canvas.releasePointerCapture(e.pointerId); }catch{}
+    }
+    canvas.addEventListener('pointerup', endPointer);
+    canvas.addEventListener('pointercancel', endPointer);
+
+    // --- Export / Import / Clear ---
+    $('clear').addEventListener('click', ()=> drawBackgroundImmediate());
+    $('export').addEventListener('click', ()=>{
+      const s=S(); const scale=s.exportScale;
+      const tm=getMetrics(trail);
+      const off=document.createElement('canvas'); off.width=tm.w*scale; off.height=tm.h*scale;
+      const o=off.getContext('2d');
+      if(s.gradientBg){ const g=o.createLinearGradient(0,0,off.width,off.height); g.addColorStop(0,s.bg1); g.addColorStop(1,s.bg2); o.fillStyle=g; }
+      else o.fillStyle=s.bg1;
+      o.fillRect(0,0,off.width,off.height);
+      o.drawImage(trail,0,0,off.width,off.height);
+      o.drawImage(canvas,0,0,off.width,off.height);
+      off.toBlob(b=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='silk_kaleidoscope.png'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 700); }, 'image/png');
+    });
+    $('exportRec').addEventListener('click', ()=>{
+      const data={meta:{created:new Date().toISOString(),version:6},events:recording};
+      const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='silk_recording.json'; a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href), 500);
+    });
+    $('importRec').addEventListener('click', ()=> $('recFile').click());
+    $('recFile').addEventListener('change', e=>{
+      const f=e.target.files[0]; if(!f) return;
+      const r=new FileReader();
+      r.onload=()=>{ try{ const data=JSON.parse(r.result); recording.length=0; (data.events||[]).forEach(ev=>recording.push(ev)); alert('Recording loaded. Click Replay.'); } catch{ alert('Failed to load'); } };
+      r.readAsText(f);
+    });
+
+    // --- Perf controls ---
+    $('renderScale').addEventListener('input', resize);
+    $('glowMode').addEventListener('change', ()=>{});
+    $('freezeBtn').addEventListener('click', async ()=>{
+      if(isFrozen) return;
+      const tm=getMetrics(trail);
+      frozenBitmap = await createImageBitmap(trail, 0,0, trail.width, trail.height);
+      isFrozen=true;
+      drawBackgroundImmediate();
+      tctx.drawImage(frozenBitmap, 0,0, tm.w, tm.h);
+    });
+    $('unfreezeBtn').addEventListener('click', ()=>{ isFrozen=false; frozenBitmap=null; });
+
+    if($('perfDefaults').checked){
+      $('quality').value=0.6; $('glow').value=10; $('trailDecay').value=0.95; $('renderScale').value=0.7; resize();
+    }
+    // --- Reactive: audio engine (file/mic + preanalysis) ---
+    const audio = new Audio(); audio.crossOrigin='anonymous'; audio.loop=true;
+    let actx=null, analyser=null, srcNode=null, micStream=null, freqData=null;
+
+    function ensureAudio(){
+      if(actx) return;
+      actx = new (window.AudioContext||window.webkitAudioContext)();
+      analyser = actx.createAnalyser(); analyser.fftSize=2048;
+      analyser.smoothingTimeConstant = S().audSmooth;
+      freqData = new Uint8Array(analyser.frequencyBinCount);
+      statusChip.textContent='Audio: ready';
+    }
+    function connectElement(){
+      ensureAudio();
+      if(srcNode) srcNode.disconnect();
+      srcNode = actx.createMediaElementSource(audio);
+      srcNode.connect(analyser); analyser.connect(actx.destination);
+      statusChip.textContent='Audio: file connected';
+    }
+    async function connectMic(){
+      ensureAudio();
+      if(micStream) { micStream.getTracks().forEach(t=>t.stop()); micStream=null; }
+      const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+      micStream=stream;
+      const micSrc = actx.createMediaStreamSource(stream);
+      micSrc.connect(analyser); analyser.connect(actx.destination);
+      statusChip.textContent='Audio: mic connected';
+      usePrecomputed=false; analysis=null;
+    }
+
+    $('audioFile').addEventListener('change', async e=>{
+      const f=e.target.files[0]; if(!f) return;
+      const url=URL.createObjectURL(f);
+      audio.src=url; connectElement();
+      usePrecomputed=false; analysis=null; anaProg.value=0; anaStatus.textContent='Loaded — click Analyze for lag-free';
+    });
+    $('playPause').addEventListener('click', async ()=>{
+      ensureAudio();
+      if(actx.state==='suspended') await actx.resume();
+      if(audio.paused){ await audio.play(); $('playPause').textContent='Pause'; statusChip.textContent='Audio: playing'; }
+      else { audio.pause(); $('playPause').textContent='Play'; statusChip.textContent='Audio: paused'; }
+    });
+    $('useMic').addEventListener('click', async ()=>{ await connectMic(); });
+
+    // --- Offline Pre-analysis (bass/mid/treb envelopes + beats) ---
+    $('analyzeBtn').addEventListener('click', async ()=>{
+      if(!audio.src){ alert('Load an audio file first.'); return; }
+      ensureAudio();
+      try{
+        anaStatus.textContent='Analyzing…'; anaProg.value=0;
+        // requires http(s) context, not file://
+        const arrBuf = await fetch(audio.src).then(r=>r.arrayBuffer());
+        const decoded = await actx.decodeAudioData(arrBuf.slice(0));
+        analysis = await preAnalyzeBuffer(decoded, p => anaProg.value=p);
+        usePrecomputed=true; anaStatus.textContent='Preanalysis ready ✓';
+        estimateBPMFromAnalysis();
+      } catch(e){ console.error(e); anaStatus.textContent='Analysis failed'; usePrecomputed=false; analysis=null; }
+    });
+
+    async function preAnalyzeBuffer(buffer, onProgress){
+      const sr=buffer.sampleRate, length=buffer.length, hop=1024, dur=buffer.duration;
+      async function renderFiltered(chain){
+        const off=new OfflineAudioContext(1,length,sr);
+        const src=off.createBufferSource(); src.buffer=buffer; let node=src;
+        for(const step of chain){ const b=off.createBiquadFilter(); b.type=step.type; b.frequency.value=step.freq; if(step.q) b.Q.value=step.q; node.connect(b); node=b; }
+        node.connect(off.destination); src.start(); const out=await off.startRendering(); return out.getChannelData(0);
+      }
+      const bass=await renderFiltered([{type:'lowpass',freq:150,q:0.707}]); onProgress(0.3);
+      const midHP=await renderFiltered([{type:'highpass',freq:150,q:0.707}]); onProgress(0.5);
+      const mid = await (async ()=>{ const off=new OfflineAudioContext(1,length,sr); const src=off.createBufferSource(); const buf=off.createBuffer(1,length,sr); buf.copyToChannel(midHP,0); src.buffer=buf; const lp=off.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=2000; src.connect(lp); lp.connect(off.destination); src.start(); const out=await off.startRendering(); return out.getChannelData(0); })(); onProgress(0.7);
+      const treb=await renderFiltered([{type:'highpass',freq:2000,q:0.707}]); onProgress(0.8);
+      function makeEnv(sig){ const env=new Float32Array(Math.ceil(length/hop)); let ema=0,k=0.2,idx=0; for(let i=0;i<length;i++){ const v=Math.abs(sig[i]); ema=ema*(1-k)+v*k; if(i%hop===0) env[idx++]=ema; } let m=1e-6; for(let i=0;i<env.length;i++) if(env[i]>m) m=env[i]; for(let i=0;i<env.length;i++) env[i]/=m; return env; }
+      const envB=makeEnv(bass); onProgress(0.9);
+      const envM=makeEnv(mid); const envT=makeEnv(treb);
+      function detectBeats(env){ const beats=new Array(env.length).fill(false); let avg=0,last=-1e9; const hold=clampInt($('beatHold').value,0,600,140); const sens=clampNum($('beatSens').value,0.5,3,1.2); for(let i=0;i<env.length;i++){ avg=avg*0.98+env[i]*0.02; const thr=avg*(0.9/sens+0.1); if(env[i]>thr+0.08 && (i-last)*hop/sr*1000>hold){ beats[i]=true; last=i; } } return beats; }
+      const beatB=detectBeats(envB), beatM=detectBeats(envM), beatT=detectBeats(envT);
+      const frames=[]; for(let i=0;i<envB.length;i++){ frames.push({ t:i*hop/sr, nb:envB[i], nm:envM[i], nt:envT[i], beatB:beatB[i], beatM:beatM[i], beatT:beatT[i] }); }
+      onProgress(1); return { sampleRate: sr, hop, frames, duration: dur };
+    }
+
+    function getPreFrame(){ if(!analysis) return null; const t=audio.currentTime; const idx=Math.min(analysis.frames.length-1, Math.floor(t*analysis.sampleRate/analysis.hop)); return analysis.frames[idx]; }
+
+    // --- BPM estimate + lamp ---
+    function estimateBPMFromAnalysis(){
+      if(!analysis){ $('bpmChip').textContent='BPM: —'; return; }
+      const times=[]; for(const fr of analysis.frames){ if(fr.beatB) times.push(fr.t); }
+      if(times.length<4){ $('bpmChip').textContent='BPM: —'; return; }
+      const iv=[]; for(let i=1;i<times.length;i++) iv.push(times[i]-times[i-1]); iv.sort((a,b)=>a-b);
+      const mid=Math.floor(iv.length/2); const med = iv.length%2? iv[mid] : (iv[mid-1]+iv[mid])/2;
+      $('bpmChip').textContent='BPM: '+Math.round(60/med);
+    }
+    function flashLamp(){ const lamp=$('bpmLamp'); lamp.style.background='#5ff'; lamp.style.boxShadow='0 0 16px rgba(120,240,255,.9)'; setTimeout(()=>{ lamp.style.background='#122'; lamp.style.boxShadow='0 0 0 rgba(255,255,255,0)'; }, 80); }
+
+    // --- Audio-driven animation tick (affects overrides; symmetry handled in drawSmartStroke) ---
+    function audioTick(){
+      let nb=0,nm=0,nt=0, beatBass=false, beatMid=false, beatTre=false;
+      if(usePrecomputed && analysis && !audio.paused){ const f=getPreFrame(); if(f){ nb=f.nb; nm=f.nm; nt=f.nt; beatBass=f.beatB; beatMid=f.beatM; beatTre=f.beatT; } statusChip.textContent='Audio: precomputed'; }
+      else if(analyser){ analyser.smoothingTimeConstant=S().audSmooth; analyser.getByteFrequencyData(freqData); const nyq=actx.sampleRate/2; const bins=analyser.frequencyBinCount; const bin=f=>Math.round(f/nyq*bins); const band=(f0,f1)=>{ let S=0,N=0; const i0=bin(f0), i1=bin(f1); for(let i=i0;i<=i1&&i<freqData.length;i++){ S+=freqData[i]; N++; } return N?S/N:0; }; const g=S().audGain; nb=Math.min(1,(band(20,150)/255)*g); nm=Math.min(1,(band(150,2000)/255)*g); nt=Math.min(1,(band(2000,12000)/255)*g); statusChip.textContent='Audio: realtime'; }
+      if(beatBass||beatMid||beatTre) flashLamp();
+
+      audioOverrides=null;
+      const base = { pens:S().pens, layers:S().layers, glow:S().glow, spiralAngle:S().spiralAngle };
+      if(S().reactMode==='mapBands'){ const pens=2+Math.round(base.pens*(0.5+nm)); const layers=2+Math.round(base.layers*(0.5+nb)); const glow=Math.min(60, base.glow + nt*40); audioOverrides={pens,layers,glow}; }
+      if(S().reactMode==='hue' || S().reactMode==='all'){ hueOffset=(hueOffset + (nm*3 + nt*4)) % 360; }
+      if(S().reactMode==='spiral' || S().reactMode==='all'){ audioOverrides=Object.assign({},audioOverrides,{spiralAngle: base.spiralAngle + (nb-0.5)*0.4}); }
+      if(S().reactMode==='size' || S().reactMode==='all'){ $('penSize').value = (clampNum($('penSize').value,0.5,48,2)*(0.85+nm*0.9)).toFixed(2); }
+      if(beatBass||beatMid||beatTre){ const s=S(); const sizeBoost=s.beatSizeBoost*(beatBass?1.0:beatMid?0.6:0.4); const glowBoost=s.beatGlowBoost*(beatTre?1.0:0.6); $('penSize').value=Math.min(48,(parseFloat($('penSize').value)||2)+sizeBoost).toFixed(2); audioOverrides=Object.assign({},audioOverrides,{glow:Math.min(60,(audioOverrides&&audioOverrides.glow!=null?audioOverrides.glow:s.glow)+glowBoost)}); }
+
+      // auto ghosts (symmetry applies inside drawSmartStroke)
+      if(S().autoDance){
+        const tm=getMetrics(trail); const cx=tm.cx, cy=tm.cy; const baseR=Math.min(tm.w,tm.h)*0.35;
+        const r=baseR*(0.7 + nb*0.6); const speed=0.01 + nm*0.06; const jitter=(nt-0.3)*8;
+        window._ghosts = window._ghosts || Array.from({length:S().ghostCount},(_,i)=>({angle:i/Math.max(1,S().ghostCount)*Math.PI*2, x:cx, y:cy, px:cx, py:cy}));
+        const ghosts=window._ghosts;
+        while(ghosts.length<S().ghostCount) ghosts.push({angle:Math.random()*Math.PI*2,x:cx,y:cy,px:cx,py:cy});
+        if(ghosts.length>S().ghostCount) ghosts.length=S().ghostCount;
+        for(let i=0;i<ghosts.length;i++){
+          const g=ghosts[i]; const phase=i/Math.max(1,ghosts.length)*Math.PI*2;
+          g.angle += speed*(1 + 0.15*Math.sin(phase));
+          const rr=r*(0.8 + 0.2*Math.sin(phase*2));
+          const nx = cx + Math.cos(g.angle+phase)*rr + (Math.random()-0.5)*jitter;
+          const ny = cy + Math.sin(g.angle+phase)*rr + (Math.random()-0.5)*jitter;
+          drawSmartStroke(g.x, g.y, nx, ny, 0.6, audioOverrides?Object.assign({},S(),audioOverrides):null);
+          g.x=nx; g.y=ny;
+        }
+      }
+      requestAnimationFrame(audioTick);
+    }
+    requestAnimationFrame(audioTick);
+
+    // structural updates
+    $('gradientBg').addEventListener('change', drawBackgroundImmediate);
+    ['bg1','bg2'].forEach(id=>$(id).addEventListener('input', drawBackgroundImmediate));
+    ['layers','extraLayers','spiral','spiralAngle','pens','symmetryMode','folds']
+      .forEach(id=>$(id).addEventListener('input', ()=>cacheLayerTransforms(true)));
+
+    // start
+    drawBackgroundImmediate();
+  })();
+  </script>
+  <!-- Headless 4K Render (symmetry-aware) -->
+  <script>
+  (() => {
+    const $ = id => document.getElementById(id);
+
+    function buildCachedSteps(s){
+      const total=Math.max(1, Math.round(s.layers*(s.extraLayers+1)));
+      const steps=[];
+      for(let st=0; st<total; st++){
+        const t = st / Math.max(1, total-1);
+        const scale = 1 - t*0.95;
+        const spiralRot = s.spiral ? (t * s.spiralAngle * s.layers) : 0;
+        steps.push({ t, scale, spiralRot, alphaMul:(1 - t*0.72), widthMul:(1 - t*0.8), glowMul:(1 - t*0.6) });
+      }
+      return steps;
+    }
+
+    // mirror/rotational symmetry for offline contexts
+    function symmetrySegmentsOff(x0,y0,x1,y1, s, cx,cy){
+      const out=[];
+      const mode=s.symmetryMode;
+      if(mode==='none'){ out.push({x0,y0,x1,y1}); return out; }
+      const folds=Math.max(2, s.folds|0);
+      const sector= (Math.PI*2)/folds;
+      const rot=(px,py,a)=>{ const dx=px-cx, dy=py-cy; const c=Math.cos(a), sn=Math.sin(a); return {x: cx + dx*c - dy*sn, y: cy + dx*sn + dy*c}; };
+      const reflect=(px,py,angMid)=>{ const dx=px-cx, dy=py-cy; const c=Math.cos(angMid), s2=Math.sin(angMid); const rx=dx*c+dy*s2, ry=-dx*s2+dy*c; const ry2=-ry; return {x: cx + rx*c - ry2*s2, y: cy + rx*s2 + ry2*c}; };
+      if(mode==='rotational'){
+        for(let k=0;k<folds;k++){ const a=k*sector; const p0=rot(x0,y0,a), p1=rot(x1,y1,a); out.push({x0:p0.x,y0:p0.y,x1:p1.x,y1:p1.y}); }
+      } else { // mirror
+        for(let k=0;k<folds;k++){
+          const a=k*sector, mid=a+sector*0.5;
+          const rp0=rot(x0,y0,a), rp1=rot(x1,y1,a);
+          if(k%2===0) out.push({x0:rp0.x,y0:rp0.y,x1:rp1.x,y1:rp1.y});
+          else { const mp0=reflect(rp0.x,rp0.y,mid), mp1=reflect(rp1.x,rp1.y,mid); out.push({x0:mp0.x,y0:mp0.y,x1:mp1.x,y1:mp1.y}); }
+        }
+      }
+      return out;
+    }
+
+    // stroke into an arbitrary 2D context (W×H), with symmetry
+    function drawSmartStrokeInto(tctxLocal, W, H, x0,y0,x1,y1, pressure, s, cachedSteps){
+      const cx=W/2, cy=H/2;
+      const q=s.quality;
+      const segments=Math.max(1, Math.round(Math.hypot(x1-x0,y1-y0)/(2/q)));
+      const penSkip=Math.max(1, Math.round(1/q));
+      const speed=Math.hypot(x1-x0,y1-y0);
+      const speedFactor=Math.min(3,1+speed*0.02);
+      const baseWidth=s.penSize*speedFactor*(0.6+pressure*1.4);
+
+      const segs = symmetrySegmentsOff(x0,y0,x1,y1, s, cx,cy);
+
+      for(const seg of segs){
+        for(let sg=0; sg<segments; sg++){
+          const u0=sg/segments, u1=(sg+1)/segments;
+          const sx0=seg.x0+(seg.x1-seg.x0)*u0, sy0=seg.y0+(seg.y1-seg.y0)*u0;
+          const sx1=seg.x0+(seg.x1-seg.x0)*u1, sy1=seg.y0+(seg.y1-seg.y0)*u1;
+          for(let i=0;i<cachedSteps.length;i++){
+            const st=cachedSteps[i];
+            const sr=Math.cos(st.spiralRot), si=Math.sin(st.spiralRot);
+            let ax0=(sx0-cx)*st.scale, ay0=(sy0-cy)*st.scale;
+            let ax1=(sx1-cx)*st.scale, ay1=(sy1-cy)*st.scale;
+            const rx0c=ax0*sr - ay0*si, ry0c=ax0*si + ay0*sr;
+            const rx1c=ax1*sr - ay1*si, ry1c=ax1*si + ay1*sr;
+
+            for(let p=0;p<s.pens;p+=penSkip){
+              const a=p*(2*Math.PI/s.pens), c=Math.cos(a), siP=Math.sin(a);
+              const rx0=cx + (rx0c*c - ry0c*siP), ry0=cy + (rx0c*siP + ry0c*c);
+              const rx1=cx + (rx1c*c - ry1c*siP), ry1=cy + (rx1c*siP + ry1c*c);
+
+              tctxLocal.beginPath(); tctxLocal.moveTo(rx0,ry0);
+              if(s.penType==='weave'){
+                const mx=(rx0+rx1)/2, my=(ry0+ry1)/2; const dx=rx1-rx0, dy=ry1-ry0; const len=Math.hypot(dx,dy)||1;
+                const nx=-dy/len, ny=dx/len; const wig=(Math.sin(p*1.9 + i*0.35)*0.5)*(10*(1-st.t));
+                tctxLocal.quadraticCurveTo(mx+nx*wig, my+ny*wig, rx1,ry1);
+              } else if(s.penType==='jitter'){
+                tctxLocal.lineTo(rx1 + (Math.random()-0.5)*6*(1-st.t), ry1 + (Math.random()-0.5)*6*(1-st.t));
+              } else { tctxLocal.lineTo(rx1,ry1); }
+
+              // color
+              let strokeStyle=s.color;
+              if(s.colorMode==='perPen'){ const hue=Math.round((p/Math.max(1,s.pens))*360); strokeStyle=`hsl(${hue} 85% 60%)`; }
+              else if(s.colorMode==='rainbow'){ const hue=Math.round((p/Math.max(1,s.pens))*360); strokeStyle=`hsl(${hue} 85% 60%)`; }
+              const layerAlpha=Math.max(0.01, s.alpha*st.alphaMul*(0.5+pressure*0.75));
+              if(strokeStyle.startsWith('hsl')) tctxLocal.strokeStyle=strokeStyle.replace(')', ` / ${Math.round(layerAlpha*100)}% )`);
+              else { const h = strokeStyle.replace('#',''); const bi=parseInt(h,16); tctxLocal.strokeStyle = `rgba(${(bi>>16)&255},${(bi>>8)&255},${bi&255},${layerAlpha})`; }
+
+              tctxLocal.lineWidth=Math.max(0.2, baseWidth*st.widthMul);
+              tctxLocal.shadowBlur=s.glow*st.glowMul; tctxLocal.shadowColor=strokeStyle;
+              tctxLocal.globalCompositeOperation='lighter';
+              tctxLocal.stroke(); tctxLocal.shadowBlur=0;
+            }
+          }
+        }
+      }
+    }
+
+    function getPreFrameAt(analysis, t){
+      if(!window.analysis) return null;
+      const idx=Math.min(analysis.frames.length-1, Math.floor(t * analysis.sampleRate / analysis.hop));
+      return analysis.frames[idx];
+    }
+
+    document.getElementById('render4k').addEventListener('click', async ()=>{
+      const fps = Math.max(10, Math.min(60, parseInt($('renderFps').value)||60));
+      const seconds = Math.max(1, Math.min(600, parseInt($('renderDur').value)||30));
+      const kbps = Math.max(1000, Math.min(50000, parseInt($('renderKbps').value)||16000));
+      const usePre = $('renderUsePre').checked;
+      const wantMapBands = $('renderMapBands').checked;
+      const status = $('renderStatus'); const prog = $('renderProg');
+      if(usePre && !window.analysis){ alert('Analyze the audio file first.'); return; }
+
+      status.textContent='Preparing 4K render…'; prog.value=0;
+
+      const W=3840, H=2160;
+      const offTrail=document.createElement('canvas'); offTrail.width=W; offTrail.height=H; const ot=offTrail.getContext('2d');
+      const offComp=document.createElement('canvas'); offComp.width=W; offComp.height=H; const oc=offComp.getContext('2d');
+
+      const s0 = window.S();
+      if(s0.gradientBg){ const g=ot.createLinearGradient(0,0,W,H); g.addColorStop(0,s0.bg1); g.addColorStop(1,s0.bg2); ot.fillStyle=g; }
+      else ot.fillStyle=s0.bg1;
+      ot.fillRect(0,0,W,H);
+
+      const stream = offComp.captureStream(fps);
+      let mime='video/webm;codecs=vp9'; if(!MediaRecorder.isTypeSupported(mime)) mime='video/webm;codecs=vp8';
+      const rec = new MediaRecorder(stream, {mimeType:mime, videoBitsPerSecond: kbps*1000});
+      const chunks=[]; rec.ondataavailable=e=>{ if(e.data && e.data.size) chunks.push(e.data); };
+      const done = new Promise(res=>rec.onstop=res); rec.start();
+
+      const totalFrames = Math.round(seconds*fps);
+      const basePens=s0.pens, baseLayers=s0.layers, baseGlow=s0.glow, baseSpiral=s0.spiralAngle;
+      const baseSymMode=s0.symmetryMode, baseFolds=s0.folds;
+      const cachedStepsBase = buildCachedSteps(s0);
+      const cx=W/2, cy=H/2;
+      const ghosts=Array.from({length:s0.ghostCount},(_,i)=>({angle:i/Math.max(1,s0.ghostCount)*Math.PI*2, x:cx, y:cy, px:cx, py:cy}));
+
+      for(let f=0; f<totalFrames; f++){
+        const t = f / fps;
+
+        // trail fade
+        ot.globalCompositeOperation='source-over';
+        ot.fillStyle=`rgba(0,0,0,${1 - s0.trailDecay})`;
+        ot.fillRect(0,0,W,H);
+
+        // per-frame audio maps
+        let nb=0,nm=0,nt=0, beatB=false, beatM=false, beatT=false;
+        if(usePre && window.analysis){ const fr=getPreFrameAt(window.analysis, t); if(fr){ nb=fr.nb; nm=fr.nm; nt=fr.nt; beatB=fr.beatB; beatM=fr.beatM; beatT=fr.beatT; } }
+
+        let pens=basePens, layers=baseLayers, glow=baseGlow, spiralAngle=baseSpiral, symmetryMode=baseSymMode, folds=baseFolds;
+        if(wantMapBands){ pens = 2 + Math.round(basePens * (0.5 + nm)); layers = 2 + Math.round(baseLayers * (0.5 + nb)); glow = Math.min(60, baseGlow + nt*40); }
+        if(beatB || beatM || beatT){
+          const sizeBoost=(beatB?1.0: beatM?0.6: 0.4)*s0.beatSizeBoost;
+          const glowBoost=(beatT?1.0:0.6)*s0.beatGlowBoost;
+          s0.penSize=Math.min(48, s0.penSize + sizeBoost);
+          glow=Math.min(60, glow + glowBoost);
+        }
+        const sFrame = Object.assign({}, s0, {pens,layers,glow,spiralAngle,symmetryMode,folds});
+        const cachedSteps=(layers===baseLayers)?cachedStepsBase:buildCachedSteps(sFrame);
+
+        // move ghosts + draw
+        const baseR=Math.min(W,H)*0.35;
+        const r=baseR*(0.7 + nb*0.6);
+        const speed=0.01 + nm*0.06;
+        const jitter=(nt-0.3)*8;
+        for(let i=0;i<ghosts.length;i++){
+          const g=ghosts[i];
+          const phase=i/Math.max(1,ghosts.length)*Math.PI*2;
+          g.angle += speed*(1 + 0.15*Math.sin(phase));
+          const rr=r*(0.8 + 0.2*Math.sin(phase*2));
+          g.px=g.x; g.py=g.y;
+          g.x = cx + Math.cos(g.angle+phase)*rr + (Math.random()-0.5)*jitter;
+          g.y = cy + Math.sin(g.angle+phase)*rr + (Math.random()-0.5)*jitter;
+          drawSmartStrokeInto(ot, W,H, g.px||g.x, g.py||g.y, g.x, g.y, 0.6, sFrame, cachedSteps);
+        }
+
+        // composite for recorder
+        oc.globalCompositeOperation='source-over';
+        oc.drawImage(offTrail,0,0,W,H);
+
+        if(f%10===0){ prog.value=f/totalFrames; await new Promise(r=>setTimeout(r,0)); }
+      }
+
+      rec.stop(); await done;
+      const blob=new Blob(chunks,{type:rec.mimeType});
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='silk_render_4k.webm'; a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+      prog.value=1; status.textContent='Render complete ✓';
+    });
+  })();
+  </script>
+
+  <!-- PNG Sequence Export (symmetry-aware) -->
+  <script>
+  (() => {
+    const $ = id => document.getElementById(id);
+
+    function buildCachedSteps(s){
+      const total=Math.max(1, Math.round(s.layers*(s.extraLayers+1)));
+      const steps=[];
+      for(let st=0; st<total; st++){
+        const t = st / Math.max(1, total-1);
+        const scale = 1 - t*0.95;
+        const spiralRot = s.spiral ? (t * s.spiralAngle * s.layers) : 0;
+        steps.push({ t, scale, spiralRot, alphaMul:(1 - t*0.72), widthMul:(1 - t*0.8), glowMul:(1 - t*0.6) });
+      }
+      return steps;
+    }
+    function getPreFrameAt(analysis, t){
+      if(!window.analysis) return null;
+      const idx=Math.min(analysis.frames.length-1, Math.floor(t * analysis.sampleRate / analysis.hop));
+      return analysis.frames[idx];
+    }
+    // reuse symmetry + drawInto from previous script via window scope? We redeclare small wrappers:
+    function symmetrySegmentsOff(x0,y0,x1,y1, s, cx,cy){
+      const out=[];
+      const mode=s.symmetryMode;
+      if(mode==='none'){ out.push({x0,y0,x1,y1}); return out; }
+      const folds=Math.max(2, s.folds|0);
+      const sector= (Math.PI*2)/folds;
+      const rot=(px,py,a)=>{ const dx=px-cx, dy=py-cy; const c=Math.cos(a), sn=Math.sin(a); return {x: cx + dx*c - dy*sn, y: cy + dx*sn + dy*c}; };
+      const reflect=(px,py,angMid)=>{ const dx=px-cx, dy=py-cy; const c=Math.cos(angMid), s2=Math.sin(angMid); const rx=dx*c+dy*s2, ry=-dx*s2+dy*c; const ry2=-ry; return {x: cx + rx*c - ry2*s2, y: cy + rx*s2 + ry2*c}; };
+      if(mode==='rotational'){ for(let k=0;k<folds;k++){ const a=k*sector; const p0=rot(x0,y0,a), p1=rot(x1,y1,a); out.push({x0:p0.x,y0:p0.y,x1:p1.x,y1:p1.y}); } }
+      else { for(let k=0;k<folds;k++){ const a=k*sector, mid=a+sector*0.5; const rp0=rot(x0,y0,a), rp1=rot(x1,y1,a); if(k%2===0) out.push({x0:rp0.x,y0:rp0.y,x1:rp1.x,y1:rp1.y}); else { const mp0=reflect(rp0.x,rp0.y,mid), mp1=reflect(rp1.x,rp1.y,mid); out.push({x0:mp0.x,y0:mp0.y,x1:mp1.x,y1:mp1.y}); } } }
+      return out;
+    }
+    function drawSmartStrokeInto(tctxLocal, W, H, x0,y0,x1,y1, pressure, s, cachedSteps){
+      const cx=W/2, cy=H/2;
+      const q=s.quality;
+      const segments=Math.max(1, Math.round(Math.hypot(x1-x0,y1-y0)/(2/q)));
+      const penSkip=Math.max(1, Math.round(1/q));
+      const speed=Math.hypot(x1-x0,y1-y0);
+      const speedFactor=Math.min(3,1+speed*0.02);
+      const baseWidth=s.penSize*speedFactor*(0.6+pressure*1.4);
+      const segs=symmetrySegmentsOff(x0,y0,x1,y1,s,cx,cy);
+      for(const seg of segs){
+        for(let sg=0; sg<segments; sg++){
+          const u0=sg/segments, u1=(sg+1)/segments;
+          const sx0=seg.x0+(seg.x1-seg.x0)*u0, sy0=seg.y0+(seg.y1-seg.y0)*u0;
+          const sx1=seg.x0+(seg.x1-seg.x0)*u1, sy1=seg.y0+(seg.y1-seg.y0)*u1;
+          for(let i=0;i<cachedSteps.length;i++){
+            const st=cachedSteps[i];
+            const sr=Math.cos(st.spiralRot), si=Math.sin(st.spiralRot);
+            let ax0=(sx0-cx)*st.scale, ay0=(sy0-cy)*st.scale;
+            let ax1=(sx1-cx)*st.scale, ay1=(sy1-cy)*st.scale;
+            const rx0c=ax0*sr - ay0*si, ry0c=ax0*si + ay0*sr;
+            const rx1c=ax1*sr - ay1*si, ry1c=ax1*si + ay1*sr;
+            for(let p=0;p<s.pens;p+=penSkip){
+              const a=p*(2*Math.PI/s.pens), c=Math.cos(a), siP=Math.sin(a);
+              const rx0=cx + (rx0c*c - ry0c*siP), ry0=cy + (rx0c*siP + ry0c*c);
+              const rx1=cx + (rx1c*c - ry1c*siP), ry1=cy + (rx1c*siP + ry1c*c);
+              tctxLocal.beginPath(); tctxLocal.moveTo(rx0,ry0);
+              if(s.penType==='weave'){
+                const mx=(rx0+rx1)/2, my=(ry0+ry1)/2; const dx=rx1-rx0, dy=ry1-ry0; const len=Math.hypot(dx,dy)||1;
+                const nx=-dy/len, ny=dx/len; const wig=(Math.sin(p*1.9 + i*0.35)*0.5)*(10*(1-st.t));
+                tctxLocal.quadraticCurveTo(mx+nx*wig, my+ny*wig, rx1,ry1);
+              } else if(s.penType==='jitter'){
+                tctxLocal.lineTo(rx1 + (Math.random()-0.5)*6*(1-st.t), ry1 + (Math.random()-0.5)*6*(1-st.t));
+              } else { tctxLocal.lineTo(rx1,ry1); }
+              let strokeStyle=s.color;
+              if(s.colorMode==='perPen'){ const hue=Math.round((p/Math.max(1,s.pens))*360); strokeStyle=`hsl(${hue} 85% 60%)`; }
+              else if(s.colorMode==='rainbow'){ const hue=Math.round((p/Math.max(1,s.pens))*360); strokeStyle=`hsl(${hue} 85% 60%)`; }
+              const layerAlpha=Math.max(0.01, s.alpha*st.alphaMul*(0.5+pressure*0.75));
+              if(strokeStyle.startsWith('hsl')) tctxLocal.strokeStyle=strokeStyle.replace(')', ` / ${Math.round(layerAlpha*100)}% )`);
+              else { const h = strokeStyle.replace('#',''); const bi=parseInt(h,16); tctxLocal.strokeStyle = `rgba(${(bi>>16)&255},${(bi>>8)&255},${bi&255},${layerAlpha})`; }
+              tctxLocal.lineWidth=Math.max(0.2, baseWidth*st.widthMul);
+              tctxLocal.shadowBlur=s.glow*st.glowMul; tctxLocal.shadowColor=strokeStyle;
+              tctxLocal.globalCompositeOperation='lighter';
+              tctxLocal.stroke(); tctxLocal.shadowBlur=0;
+            }
+          }
+        }
+      }
+    }
+
+    $('exportPngSeq').addEventListener('click', async ()=>{
+      const res = $('pngRes').value;
+      const fps = Math.max(1, Math.min(60, parseInt($('pngFps').value)||30));
+      const seconds = Math.max(1, Math.min(120, parseInt($('pngDur').value)||5));
+      const prefix = $('pngPrefix').value || 'frame_';
+      const start = parseInt($('pngStart').value)||0;
+      const usePre = $('pngUsePre').checked;
+      const status = $('pngStatus'); const prog = $('pngProg');
+
+      if(usePre && !window.analysis){ alert('Analyze the audio file first.'); return; }
+      const W = res==='8k' ? 7680 : 3840; const H = res==='8k' ? 4320 : 2160;
+      const offTrail=document.createElement('canvas'); offTrail.width=W; offTrail.height=H; const ot=offTrail.getContext('2d');
+
+      const s0 = window.S();
+      if(s0.gradientBg){ const g=ot.createLinearGradient(0,0,W,H); g.addColorStop(0,s0.bg1); g.addColorStop(1,s0.bg2); ot.fillStyle=g; }
+      else ot.fillStyle=s0.bg1;
+      ot.fillRect(0,0,W,H);
+
+      const totalFrames = Math.round(seconds*fps);
+      const basePens=s0.pens, baseLayers=s0.layers, baseGlow=s0.glow, baseSpiral=s0.spiralAngle, baseSym=s0.symmetryMode, baseF=s0.folds;
+      const cachedStepsBase = buildCachedSteps(s0);
+      const cx=W/2, cy=H/2;
+
+      status.textContent='Exporting…';
+      for(let f=0; f<totalFrames; f++){
+        const t=f/fps;
+
+        // fade
+        ot.globalCompositeOperation='source-over';
+        ot.fillStyle=`rgba(0,0,0,${1 - s0.trailDecay})`;
+        ot.fillRect(0,0,W,H);
+
+        let nb=0,nm=0,nt=0, beatB=false, beatM=false, beatT=false;
+        if(usePre && window.analysis){ const fr=getPreFrameAt(window.analysis, t); if(fr){ nb=fr.nb; nm=fr.nm; nt=fr.nt; beatB=fr.beatB; beatM=fr.beatM; beatT=fr.beatT; } }
+
+        let pens=basePens, layers=baseLayers, glow=baseGlow, spiralAngle=baseSpiral, symmetryMode=baseSym, folds=baseF;
+        if(beatB || beatM || beatT){
+          const sizeBoost=(beatB?1.0: beatM?0.6: 0.4)*s0.beatSizeBoost;
+          const glowBoost=(beatT?1.0:0.6)*s0.beatGlowBoost;
+          s0.penSize=Math.min(48, s0.penSize + sizeBoost);
+          glow=Math.min(60, glow + glowBoost);
+        }
+        const sFrame = Object.assign({}, s0, {pens,layers,glow,spiralAngle,symmetryMode,folds});
+        const cachedSteps=(layers===baseLayers)?cachedStepsBase:buildCachedSteps(sFrame);
+
+        // simple deterministic tracer path
+        const baseR=Math.min(W,H)*0.35;
+        const r=baseR*(0.7 + nb*0.6);
+        const speed=0.01 + nm*0.06;
+        const angle=t*speed*fps*2*Math.PI;
+        const rr=r;
+        const x0=cx + Math.cos(angle-0.12)*rr, y0=cy + Math.sin(angle-0.12)*rr;
+        const x1=cx + Math.cos(angle)*rr,        y1=cy + Math.sin(angle)*rr;
+        drawSmartStrokeInto(ot,W,H,x0,y0,x1,y1,0.6,sFrame,cachedSteps);
+
+        await new Promise(resolve=>{
+          offTrail.toBlob(blob=>{
+            const a=document.createElement('a');
+            a.href=URL.createObjectURL(blob);
+            const idx=(start+f).toString().padStart(5,'0');
+            a.download=`${prefix}${idx}.png`;
+            a.click();
+            setTimeout(()=>URL.revokeObjectURL(a.href), 800);
+            resolve();
+          }, 'image/png');
+        });
+
+        if(f%5===0){ prog.value=f/totalFrames; await new Promise(r=>setTimeout(r,0)); }
+      }
+      prog.value=1; status.textContent='PNG sequence complete ✓';
+    });
+  })();
+  </script>
+
+  <!-- Preset Manager -->
+  <script>
+  (() => {
+    const $ = id => document.getElementById(id);
+    const key='silk_presets_v3';
+    const listEl=$('presetList'); const nameEl=$('presetName');
+
+    function loadAll(){ try{ return JSON.parse(localStorage.getItem(key)||'{}'); }catch{ return {}; } }
+    function saveAll(obj){ localStorage.setItem(key, JSON.stringify(obj)); refreshList(); }
+
+    function collect(){
+      return {
+        pens: pens.value, layers: layers.value, extraLayers: extraLayers.value, spiral: spiral.checked, spiralAngle: spiralAngle.value,
+        symmetryMode: symmetryMode.value, folds: folds.value,
+        penType: penType.value, penSize: penSize.value, alpha: alpha.value, penColor: penColor.value, colorMode: colorMode.value,
+        smoothing: smoothing.value, trailDecay: trailDecay.value, glow: glow.value, quality: quality.value, pressure: pressure.checked,
+        gradientBg: gradientBg.checked, bg1: bg1.value, bg2: bg2.value, showDots: showDots.checked, dotSize: dotSize.value, dotDensity: dotDensity.value,
+        audGain: audGain.value, audSmooth: audSmooth.value, reactMode: reactMode.value, autoDance: autoDance.checked, ghostCount: ghostCount.value,
+        beatSens: beatSens.value, beatHold: beatHold.value, beatSizeBoost: beatSizeBoost.value, beatGlowBoost: beatGlowBoost.value,
+        renderScale: renderScale.value, dynThrottle: dynThrottle.value, glowMode: glowMode.value, perfDefaults: perfDefaults.checked
+      };
+    }
+    function apply(p){
+      if(!p) return;
+      pens.value=p.pens; layers.value=p.layers; extraLayers.value=p.extraLayers; spiral.checked=p.spiral; spiralAngle.value=p.spiralAngle;
+      symmetryMode.value=p.symmetryMode||'none'; folds.value=p.folds||6;
+      penType.value=p.penType; penSize.value=p.penSize; alpha.value=p.alpha; penColor.value=p.penColor; colorMode.value=p.colorMode;
+      smoothing.value=p.smoothing; trailDecay.value=p.trailDecay; glow.value=p.glow; quality.value=p.quality; pressure.checked=p.pressure;
+      gradientBg.checked=p.gradientBg; bg1.value=p.bg1; bg2.value=p.bg2; showDots.checked=p.showDots; dotSize.value=p.dotSize; dotDensity.value=p.dotDensity;
+      audGain.value=p.audGain; audSmooth.value=p.audSmooth; reactMode.value=p.reactMode; autoDance.checked=p.autoDance; ghostCount.value=p.ghostCount;
+      beatSens.value=p.beatSens; beatHold.value=p.beatHold; beatSizeBoost.value=p.beatSizeBoost; beatGlowBoost.value=p.beatGlowBoost;
+      renderScale.value=p.renderScale; dynThrottle.value=p.dynThrottle; glowMode.value=p.glowMode; perfDefaults.checked=p.perfDefaults;
+      // fire side-effects
+      document.getElementById('renderScale').dispatchEvent(new Event('input'));
+      document.getElementById('gradientBg').dispatchEvent(new Event('change'));
+      ['layers','extraLayers','spiral','spiralAngle','pens','symmetryMode','folds'].forEach(id=>document.getElementById(id).dispatchEvent(new Event('input')));
+    }
+    function refreshList(){
+      const all=loadAll(); listEl.innerHTML='';
+      Object.keys(all).forEach(name=>{ const opt=document.createElement('option'); opt.value=name; opt.textContent=name; listEl.appendChild(opt); });
+    }
+
+    document.getElementById('savePreset').addEventListener('click', ()=>{
+      const name=nameEl.value.trim() || ('Preset '+new Date().toLocaleTimeString());
+      const all=loadAll(); all[name]=collect(); saveAll(all); nameEl.value=''; refreshList();
+    });
+    document.getElementById('loadPreset').addEventListener('click', ()=>{
+      const all=loadAll(); const sel=listEl.value; apply(all[sel]);
+    });
+    document.getElementById('deletePreset').addEventListener('click', ()=>{
+      const all=loadAll(); const sel=listEl.value; if(sel && all[sel]){ delete all[sel]; saveAll(all); refreshList(); }
+    });
+    document.getElementById('exportPresets').addEventListener('click', ()=>{
+      const all=loadAll();
+      const blob=new Blob([JSON.stringify(all,null,2)],{type:'application/json'});
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='silk_presets.json'; a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href), 800);
+    });
+    document.getElementById('importPresetsBtn').addEventListener('click', ()=> document.getElementById('importPresets').click());
+    document.getElementById('importPresets').addEventListener('change', e=>{
+      const f=e.target.files[0]; if(!f) return;
+      const r=new FileReader();
+      r.onload=()=>{ try{ const data=JSON.parse(r.result); saveAll(data); refreshList(); alert('Presets imported.'); } catch{ alert('Import failed.'); } };
+      r.readAsText(f);
+    });
+
+    // seed a couple presets the first time
+    if(!localStorage.getItem(key)){
+      const defaults={};
+      defaults['Performance']={ pens:64,layers:18,extraLayers:1,spiral:true,spiralAngle:6,symmetryMode:'rotational',folds:8,
+        penType:'weave',penSize:2,alpha:0.6,penColor:'#7dd3fc',colorMode:'perPen',smoothing:0.6,trailDecay:0.96,glow:10,quality:0.7,pressure:true,
+        gradientBg:true,bg1:'#020617',bg2:'#06273a',showDots:true,dotSize:6,dotDensity:0.6,audGain:1.2,audSmooth:0.7,reactMode:'all',autoDance:true,ghostCount:3,
+        beatSens:1.2,beatHold:140,beatSizeBoost:0.4,beatGlowBoost:12,renderScale:0.7,dynThrottle:'on',glowMode:'add',perfDefaults:true };
+      defaults['Beauty']={ pens:128,layers:28,extraLayers:2,spiral:true,spiralAngle:8,symmetryMode:'mirror',folds:10,
+        penType:'weave',penSize:2.4,alpha:0.7,penColor:'#9dd3ff',colorMode:'rainbow',smoothing:0.7,trailDecay:0.94,glow:36,quality:1,pressure:true,
+        gradientBg:true,bg1:'#010914',bg2:'#082a44',showDots:true,dotSize:7,dotDensity:0.8,audGain:1.3,audSmooth:0.75,reactMode:'all',autoDance:true,ghostCount:5,
+        beatSens:1.1,beatHold:120,beatSizeBoost:0.6,beatGlowBoost:24,renderScale:1,dynThrottle:'off',glowMode:'shadow',perfDefaults:false };
+      saveAll(defaults);
+    }
+    refreshList();
+  })();
+  </script>
+
+  <!-- END OF APP -->
+  <script>
+  (() => {
+    // expose a couple helpers
+    window.SilkApp = {
+      version: "1.1-symmetry",
+      exportState: () => S(),
+      importState: st => {
+        Object.entries(st).forEach(([k,v])=>{
+          const el=document.getElementById(k);
+          if(!el) return;
+          if(el.type==='checkbox') el.checked=!!v; else el.value=v;
+        });
+        ['layers','extraLayers','spiral','spiralAngle','pens','symmetryMode','folds'].forEach(id=>{
+          const el=document.getElementById(id); if(el) el.dispatchEvent(new Event('input'));
+        });
+        document.getElementById('gradientBg').dispatchEvent(new Event('change'));
+        document.getElementById('renderScale').dispatchEvent(new Event('input'));
+      }
+    };
+    // bootstrap
+    const resizeEvt = new Event('input');
+    document.getElementById('renderScale').dispatchEvent(resizeEvt);
+  })();
+  </script>
 </body>
 </html>
