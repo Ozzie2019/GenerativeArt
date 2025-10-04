@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Silk-like Kaleidoscope — Enhanced (with Pen Dots)</title>
+  <style>
+    :root{--bg:#071021;--panel:#0f1724;--accent:#7dd3fc}
+    html,body{height:100%;margin:0;font-family:Inter, system-ui, Arial;background:var(--bg);color:#e6eef8;overflow:hidden}
+    .app{display:grid;grid-template-columns:380px 1fr;height:100vh;gap:12px;padding:12px;box-sizing:border-box}
+    .panel{background:linear-gradient(180deg,#071025 0%, #08162a 100%);padding:12px;border-radius:10px;box-shadow:0 8px 30px rgba(2,6,23,.6);overflow:auto}
+    label{display:block;margin:8px 0 6px;font-size:13px;color:#bcdafd}
+    input[type=range]{width:100%}
+    input[type=number],select,input[type=color]{width:100%;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,.06);background:transparent;color:inherit}
+    .row{display:flex;gap:8px}
+    .row > *{flex:1}
+    button{background:var(--accent);border:none;padding:8px;border-radius:8px;color:#023047;font-weight:600;cursor:pointer}
+    .canvas-wrap{position:relative;width:100%;height:100%}
+    canvas{position:absolute;inset:0;width:100%;height:100%;display:block;border-radius:10px;touch-action:none;cursor:crosshair}
+    .footer{margin-top:10px;font-size:12px;color:#86b9d8}
+    .small{font-size:12px;color:#9fc9e6}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="panel">
+      <h3>Silk-like Kaleidoscope — Enhanced</h3>
+
+      <label>Number of pens</label>
+      <input id="pens" type="number" min="1" max="1024" value="12" />
+
+      <label>Layers toward center</label>
+      <input id="layers" type="number" min="1" max="200" value="24" />
+
+      <label>Extra layer density</label>
+      <input id="extraLayers" type="number" min="0" max="48" value="2" />
+
+      <label>Spiral?</label>
+      <input id="spiral" type="checkbox" checked />
+
+      <label>Spiral angle (degrees per full radius)</label>
+      <input id="spiralAngle" type="number" min="-360" max="360" value="6" />
+
+      <label>Pen tip type</label>
+      <select id="penType">
+        <option value="straight">Straight line</option>
+        <option value="weave">Weave</option>
+        <option value="jitter">Jitter</option>
+      </select>
+
+      <label>Pen size</label>
+      <input id="penSize" type="range" min="0.5" max="48" step="0.5" value="2" />
+
+      <label>Transparency</label>
+      <input id="alpha" type="range" min="0.01" max="1" step="0.01" value="0.65" />
+
+      <label>Pen color</label>
+      <input id="penColor" type="color" value="#7dd3fc" />
+
+      <label>Color mode</label>
+      <select id="colorMode">
+        <option value="single">Single color</option>
+        <option value="perPen">Per-pen hues</option>
+        <option value="rainbow">Rainbow (animated)</option>
+      </select>
+
+      <label>Smoothing (higher = smoother)</label>
+      <input id="smoothing" type="range" min="0" max="0.95" step="0.01" value="0.6" />
+
+      <label>Trail decay (0.86–0.997 — higher = longer trails)</label>
+      <input id="trailDecay" type="range" min="0.86" max="0.997" step="0.001" value="0.925" />
+
+      <label>Glow intensity (shadow blur)</label>
+      <input id="glow" type="range" min="0" max="60" step="1" value="20" />
+
+      <label>Quality (performance) — lower = faster</label>
+      <input id="quality" type="range" min="0.2" max="1" step="0.05" value="1" />
+      <div class="small">Quality reduces pen/layer detail while drawing to keep it smooth on low-end devices.</div>
+
+      <label><input id="pressure" type="checkbox" checked /> Use pen pressure (if supported)</label>
+
+      <div class="row" style="margin-top:8px">
+        <button id="record">Start Recording</button>
+        <button id="replay">Replay</button>
+      </div>
+
+      <label><input id="showDots" type="checkbox" checked /> Show pen dots (indicates other pens)</label>
+      <label><input id="dotSize" type="range" min="1" max="24" step="1" value="6" /> Dot size</label>
+
+      <label><input id="gradientBg" type="checkbox" /> Gradient background</label>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <input id="bg1" type="color" value="#020617" />
+        <input id="bg2" type="color" value="#06273a" />
+      </div>
+
+      <label>Export scale multiplier</label>
+      <input id="exportScale" type="number" min="1" max="8" value="3" />
+
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button id="clear">Clear</button>
+        <button id="export">Export PNG</button>
+      </div>
+      <div class="footer">Per-pen colors, pressure, recording/replay, quality throttling, and pen-dot indicators added. Draw to see dots.</div>
+    </div>
+
+    <div class="canvas-wrap">
+      <canvas id="trail"></canvas>
+      <canvas id="c"></canvas>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('c');
+  const trail = document.getElementById('trail');
+  const ctx = canvas.getContext('2d');
+  const tctx = trail.getContext('2d');
+
+  function fitCanvas(el){
+    const rect = el.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    el.width = Math.max(1, Math.floor(rect.width * dpr));
+    el.height = Math.max(1, Math.floor(rect.height * dpr));
+    const ctx2 = el.getContext('2d');
+    ctx2.setTransform(dpr,0,0,dpr,0,0);
+  }
+
+  function resize(){
+    fitCanvas(canvas);
+    fitCanvas(trail);
+    drawBackgroundImmediate();
+  }
+  window.addEventListener('resize', resize);
+  setTimeout(resize,50);
+
+  const $ = id => document.getElementById(id);
+  function S(){
+    return {
+      pens: Math.max(1, Math.min(2048, parseInt($('pens').value)||12)),
+      layers: Math.max(1, Math.min(500, parseInt($('layers').value)||24)),
+      extraLayers: Math.max(0, Math.min(96, parseInt($('extraLayers').value)||2)),
+      spiral: $('spiral').checked,
+      spiralAngle: (parseFloat($('spiralAngle').value)||0) * Math.PI/180,
+      penType: $('penType').value,
+      penSize: parseFloat($('penSize').value)||2,
+      alpha: parseFloat($('alpha').value)||0.65,
+      color: $('penColor').value || '#7dd3fc',
+      colorMode: $('colorMode').value || 'single',
+      smoothing: parseFloat($('smoothing').value)||0.6,
+      trailDecay: parseFloat($('trailDecay').value)||0.93,
+      glow: parseFloat($('glow').value)||20,
+      gradientBg: $('gradientBg').checked,
+      bg1: $('bg1').value,
+      bg2: $('bg2').value,
+      exportScale: Math.max(1, parseInt($('exportScale').value)||3),
+      quality: parseFloat($('quality').value)||1,
+      usePressure: $('pressure').checked,
+      showDots: $('showDots').checked,
+      dotSize: parseFloat($('dotSize').value)||6
+    };
+  }
+
+  function hexToRgba(hex,a=1){
+    const h = hex.replace('#','');
+    const bi = parseInt(h,16);
+    return `rgba(${(bi>>16)&255},${(bi>>8)&255},${bi&255},${a})`;
+  }
+
+  // draw background on trail canvas
+  function drawBackgroundImmediate(){
+    const s=S();
+    const w = trail.width/(window.devicePixelRatio||1);
+    const h = trail.height/(window.devicePixelRatio||1);
+    tctx.globalCompositeOperation = 'source-over';
+    tctx.globalAlpha = 1;
+    if(s.gradientBg){
+      const g = tctx.createLinearGradient(0,0,w,h); g.addColorStop(0,s.bg1); g.addColorStop(1,s.bg2); tctx.fillStyle=g;
+    } else { tctx.fillStyle = s.bg1; }
+    tctx.fillRect(0,0,w,h);
+    ctx.clearRect(0,0,w,h);
+  }
+
+  // trail fade loop
+  let rafId=null;
+  function trailLoop(){
+    const s=S();
+    const w = trail.width/(window.devicePixelRatio||1);
+    const h = trail.height/(window.devicePixelRatio||1);
+    tctx.globalCompositeOperation = 'source-over';
+    const fadeAlpha = 1 - s.trailDecay;
+    tctx.fillStyle = `rgba(0,0,0,${fadeAlpha})`;
+    tctx.fillRect(0,0,w,h);
+    rafId = requestAnimationFrame(trailLoop);
+  }
+  rafId = requestAnimationFrame(trailLoop);
+
+  // pointer smoothing using EMA per pointer
+  const pointers = new Map();
+
+  function getCanvasPoint(evt, el){
+    const rect = el.getBoundingClientRect();
+    return { x: evt.clientX - rect.left, y: evt.clientY - rect.top };
+  }
+
+  // Recording data structure
+  const recording = [];
+  let isRecording = false;
+  let recordStart = 0;
+
+  function startRecording(){ recording.length = 0; isRecording = true; recordStart = performance.now(); $('record').textContent = 'Stop Recording'; }
+  function stopRecording(){ isRecording = false; $('record').textContent = 'Start Recording'; }
+
+  // Replay controls
+  let isReplaying = false;
+  function replayRecording(){
+    if(recording.length === 0) return alert('No recording found.');
+    if(isReplaying) return;
+    isReplaying = true;
+    drawBackgroundImmediate();
+    const start = recording[0].t;
+    let i = 0;
+    function step(){
+      if(i >= recording.length){ isReplaying = false; return; }
+      const item = recording[i++];
+      if(item.type === 'down'){
+        pointers.set('replay', { x: item.x, y: item.y, rawX: item.x, rawY: item.y, vx:0, vy:0 });
+        drawPenDotsAll();
+      } else if(item.type === 'move'){
+        const prev = pointers.get('replay');
+        if(prev){
+          drawSmartStroke(prev.x, prev.y, item.x, item.y, item.pressure || 0.5, item.settings || null);
+          pointers.set('replay', { x: item.x, y: item.y, rawX: item.x, rawY: item.y });
+          drawPenDotsAll();
+        }
+      } else if(item.type === 'up'){
+        pointers.delete('replay');
+        drawPenDotsAll();
+      }
+      if(i < recording.length){
+        const delay = Math.max(0, recording[i].t - item.t);
+        setTimeout(step, delay);
+      } else {
+        isReplaying = false;
+      }
+    }
+    step();
+  }
+
+  // pointer handlers
+  function handleDown(e){
+    if(e.pointerType==='mouse' && e.button !== 0) return;
+    canvas.setPointerCapture(e.pointerId);
+    const pt = getCanvasPoint(e, canvas);
+    const pressure = (S().usePressure ? (e.pressure || 0.5) : 0.5);
+    pointers.set(e.pointerId, { rawX: pt.x, rawY: pt.y, x: pt.x, y: pt.y, vx:0, vy:0, p:pressure });
+    drawPenDotsAll();
+    if(isRecording){ recording.push({type:'down', x:pt.x, y:pt.y, pressure, t:performance.now()-recordStart, settings: S()}); }
+  }
+  function handleMove(e){
+    if(!pointers.has(e.pointerId)) return;
+    const s = S();
+    const entry = pointers.get(e.pointerId);
+    const raw = getCanvasPoint(e, canvas);
+    const pressure = (s.usePressure ? (e.pressure || entry.p || 0.5) : 0.5);
+    const alpha = 1 - s.smoothing;
+    const nx = entry.x * s.smoothing + raw.x * alpha;
+    const ny = entry.y * s.smoothing + raw.y * alpha;
+    entry.vx = nx - entry.x; entry.vy = ny - entry.y; entry.rawX = raw.x; entry.rawY = raw.y; entry.x = nx; entry.y = ny; entry.p = pressure;
+
+    const now = performance.now();
+    if(!entry.lastDraw || now - entry.lastDraw > (20 / s.quality)){
+      drawSmartStroke(entry.x - entry.vx, entry.y - entry.vy, entry.x, entry.y, pressure);
+      entry.lastDraw = now;
+    }
+
+    drawPenDotsAll();
+
+    if(isRecording){ recording.push({type:'move', x:entry.x, y:entry.y, pressure, t:performance.now()-recordStart}); }
+  }
+  function handleUp(e){
+    if(pointers.has(e.pointerId)){
+      const pt = getCanvasPoint(e, canvas);
+      if(isRecording){ recording.push({type:'up', x:pt.x, y:pt.y, pressure: (e.pressure||0.5), t:performance.now()-recordStart}); }
+      pointers.delete(e.pointerId);
+      try{ canvas.releasePointerCapture(e.pointerId); } catch(_){}
+      drawPenDotsAll();
+    }
+  }
+
+  canvas.addEventListener('pointerdown', handleDown);
+  canvas.addEventListener('pointermove', handleMove);
+  canvas.addEventListener('pointerup', handleUp);
+  canvas.addEventListener('pointercancel', handleUp);
+
+  // per-pen color generator
+  function penColorFor(p, s, tAnim=0){
+    if(s.colorMode === 'single') return s.color;
+    if(s.colorMode === 'perPen'){
+      const hue = Math.round((p / Math.max(1, s.pens)) * 360);
+      return `hsl(${hue} 85% 60%)`;
+    }
+    const hue = Math.round(((p / Math.max(1, s.pens)) * 360 + tAnim) % 360);
+    return `hsl(${hue} 85% 60%)`;
+  }
+
+  // draw pen dots on the top canvas to indicate where each replicated pen will draw
+  function drawPenDotsAll(){
+    const s = S();
+    // clear overlay
+    const w = canvas.width/(window.devicePixelRatio||1);
+    const h = canvas.height/(window.devicePixelRatio||1);
+    ctx.clearRect(0,0,w,h);
+    if(!s.showDots) return;
+    // draw for each active pointer
+    const tAnim = (performance.now() * 0.02) % 360;
+    const penSkip = Math.max(1, Math.round(1 / s.quality));
+    for(const [id, entry] of pointers){
+      // draw a dot for each pen
+      for(let p=0;p<s.pens;p+=penSkip){
+        const angle = p * (2*Math.PI / s.pens);
+        const cos = Math.cos(angle), sin = Math.sin(angle);
+        const dx = entry.x - w/2, dy = entry.y - h/2;
+        const rx = w/2 + (dx * cos - dy * sin);
+        const ry = h/2 + (dx * sin + dy * cos);
+        const col = penColorFor(p, s, tAnim);
+        ctx.beginPath();
+        ctx.arc(rx, ry, Math.max(1, s.dotSize * (1 - (p%2)*0.1)), 0, Math.PI*2);
+        // fill with pen color but subtle alpha
+        if(col.startsWith('hsl')) ctx.fillStyle = col.replace(')', ' / 80% )');
+        else ctx.fillStyle = hexToRgba(col, 0.85);
+        ctx.fill();
+        // small outline
+        ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 0.5; ctx.stroke();
+      }
+    }
+  }
+
+  // main stroke function: draws into trail canvas using many interpolated steps and glow
+  function drawSmartStroke(x0,y0,x1,y1, pressure=0.5, overrideSettings=null){
+    const s = overrideSettings || S();
+    const quality = s.quality;
+    const w = trail.width/(window.devicePixelRatio||1);
+    const h = trail.height/(window.devicePixelRatio||1);
+    const cx = w/2, cy = h/2;
+
+    const speed = Math.hypot(x1-x0,y1-y0);
+    const speedFactor = Math.min(3, 1 + speed*0.02);
+    const baseWidth = s.penSize * speedFactor * (0.6 + pressure*1.4);
+
+    const segments = Math.max(1, Math.round(Math.hypot(x1-x0,y1-y0) / (2 / quality)));
+    const totalSub = Math.max(1, Math.round(s.layers * (s.extraLayers + 1) * quality));
+    const tAnim = (performance.now() * 0.02) % 360;
+
+    for(let seg=0; seg<segments; seg++){
+      const u0 = seg/segments; const u1 = (seg+1)/segments;
+      const sx0 = x0 + (x1-x0)*u0; const sy0 = y0 + (y1-y0)*u0;
+      const sx1 = x0 + (x1-x0)*u1; const sy1 = y0 + (y1-y0)*u1;
+
+      for(let st=0; st<totalSub; st++){
+        const t = st / Math.max(1, totalSub-1);
+        const scale = 1 - t*0.95;
+        const spiralRot = s.spiral ? (t * s.spiralAngle * s.layers) : 0;
+        const layerAlphaBase = s.alpha * (1 - t*0.72);
+        const penSkip = Math.max(1, Math.round(1 / quality));
+
+        for(let p=0;p<s.pens;p+=penSkip){
+          const penAngle = p * (2*Math.PI / s.pens);
+          const cosP = Math.cos(penAngle), sinP = Math.sin(penAngle);
+
+          let ax0 = (sx0 - cx) * scale, ay0 = (sy0 - cy) * scale;
+          let ax1 = (sx1 - cx) * scale, ay1 = (sy1 - cy) * scale;
+          const sr = Math.cos(spiralRot), si = Math.sin(spiralRot);
+          const rx0c = ax0*sr - ay0*si, ry0c = ax0*si + ay0*sr;
+          const rx1c = ax1*sr - ay1*si, ry1c = ax1*si + ay1*sr;
+
+          const rx0 = cx + (rx0c * cosP - ry0c * sinP);
+          const ry0 = cy + (rx0c * sinP + ry0c * cosP);
+          const rx1 = cx + (rx1c * cosP - ry1c * sinP);
+          const ry1 = cy + (rx1c * sinP + ry1c * cosP);
+
+          tctx.beginPath(); tctx.moveTo(rx0, ry0);
+          if(s.penType === 'weave'){
+            const mx = (rx0+rx1)/2; const my = (ry0+ry1)/2;
+            const dx = rx1-rx0, dy = ry1-ry0; const len = Math.hypot(dx,dy)||1;
+            const nx = -dy/len, ny = dx/len; const wig = (Math.sin(p*1.9 + st*0.35) * 0.5) * (10*(1-t));
+            tctx.quadraticCurveTo(mx + nx*wig, my + ny*wig, rx1, ry1);
+          } else if(s.penType === 'jitter'){
+            tctx.lineTo(rx1 + (Math.random()-0.5)*6*(1-t), ry1 + (Math.random()-0.5)*6*(1-t));
+          } else { tctx.lineTo(rx1, ry1); }
+
+          const penCol = penColorFor(p, s, tAnim);
+          tctx.globalCompositeOperation = 'lighter';
+          const layerAlpha = Math.max(0.01, layerAlphaBase * (0.5 + pressure*0.75));
+          if(penCol.startsWith('hsl')){ tctx.strokeStyle = penCol.replace(')', ` / ${Math.round(layerAlpha*100)}% )`); }
+          else { tctx.strokeStyle = hexToRgba(penCol, layerAlpha); }
+          tctx.lineWidth = Math.max(0.2, baseWidth * (1 - t*0.8));
+          tctx.shadowBlur = S().glow * (1 - t*0.6);
+          tctx.shadowColor = (penCol.startsWith('hsl')) ? penCol : hexToRgba(penCol, 0.9);
+          tctx.stroke(); tctx.shadowBlur = 0;
+        }
+      }
+    }
+  }
+
+  // clear
+  $('clear').addEventListener('click', ()=>{ drawBackgroundImmediate(); ctx.clearRect(0,0,canvas.width,canvas.height); });
+
+  // export: composite trail + top canvas onto high-res canvas
+  $('export').addEventListener('click', ()=>{
+    const s=S();
+    const scale = s.exportScale;
+    const w = trail.width * scale;
+    const h = trail.height * scale;
+    const off = document.createElement('canvas'); off.width=w; off.height=h;
+    const o = off.getContext('2d');
+    if(s.gradientBg){ const g = o.createLinearGradient(0,0,w,h); g.addColorStop(0,s.bg1); g.addColorStop(1,s.bg2); o.fillStyle=g; }
+    else o.fillStyle = s.bg1;
+    o.fillRect(0,0,w,h);
+    o.drawImage(trail, 0, 0, w, h);
+    o.drawImage(canvas, 0, 0, w, h);
+    off.toBlob(b=>{ const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download='silk_kaleidoscope.png'; a.click(); URL.revokeObjectURL(a.href); }, 'image/png');
+  });
+
+  // record/replay buttons
+  $('record').addEventListener('click', ()=>{ if(isRecording) stopRecording(); else startRecording(); });
+  $('replay').addEventListener('click', ()=>{ if(isRecording) stopRecording(); replayRecording(); });
+
+  // redraw background when bg settings change
+  ['input','change'].forEach(ev=>{ ['gradientBg','bg1','bg2'].forEach(id=>document.getElementById(id).addEventListener(ev, drawBackgroundImmediate)); });
+
+})();
+</script>
+</body>
+</html>
